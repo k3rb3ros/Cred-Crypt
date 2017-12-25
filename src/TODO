@@ -1,0 +1,13 @@
+Write full coverage of unit test for secureString that prove it behaves similarly to a std::string #MOSTLY DONE#
+Update unit test for ctr mode
+Write unit tests for RedBlackTree #STARTED#
+Write unit tests for credential class
+Fix TODOs throughout the code base
+Fix FIXMEs throughtout the code base
+Solve const inconsitancies throughout code base #Completed for secStr#
+Add Tests for secureString.getline()
+Add a namespace to API
+Make help more intuitive
+Add instructions on how to build to README.md
+Find cause of password incorrect bug
+Use pcg for randomness instead of /dev/urandom
