@@ -14,7 +14,7 @@ set (CMAKE_BUILD_TYPE Debug)
 #compiler flags
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wall -Wextra -pedantic -O0")
 set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -O0")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic -O0")
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
 
 #libary versions
