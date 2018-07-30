@@ -4,8 +4,6 @@
 #include <stdint.h> //uint64_t, int_fast8_t
 #include "nodeValueBase.hpp" //nodeValueBase
 
-using std::unique_ptr;
-
 //abstract base class for node
 class nodeBase
 {
@@ -14,8 +12,7 @@ class nodeBase
     * public virtual members *
     *************************/
     //Ctor
-    explicit nodeBase() : value_(nullptr)
-    { /*nop*/ }
+    explicit nodeBase() = default;
     explicit nodeBase(nodeValueBase* value) : value_(value)
     { /*nop*/ }
 
@@ -28,5 +25,5 @@ class nodeBase
     /*****************
     * protected data *
     *****************/
-    unique_ptr<nodeValueBase> value_;
+    std::unique_ptr<nodeValueBase> value_{nullptr};
 };

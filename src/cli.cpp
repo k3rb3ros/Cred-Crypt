@@ -1,7 +1,7 @@
 #include "include/cli.hpp"
 
 //used to consistently change actions
-static inline void change_action(cred_crypt_state &state, action new_action,
+static void change_action(cred_crypt_state &state, action new_action,
                                  bool collect_inp=true, bool save_prev=true)
 {
     if (save_prev) { state.prev_action_ = state.action_; }
@@ -9,7 +9,7 @@ static inline void change_action(cred_crypt_state &state, action new_action,
     state.collect_input_ = collect_inp;
 }
 
-static inline void get_input(cred_crypt_state &state)
+static void get_input(cred_crypt_state &state)
 {
     if (state.collect_input_)
     {
@@ -27,7 +27,7 @@ static inline void get_input(cred_crypt_state &state)
     }
 }
 
-static inline void print_credential(Credential& cred)
+static void print_credential(Credential& cred)
 {
     cout << "{ " << endl
          << "\t" << "account: " << cred.account << endl;
@@ -43,7 +43,7 @@ static inline void print_credential(Credential& cred)
     cout << "}" << endl;
 }
 
-static inline void print_credentials(vector<Credential> &creds)
+static void print_credentials(vector<Credential> &creds)
 {
     if (creds.size() > 0)
     {
@@ -55,13 +55,13 @@ static inline void print_credentials(vector<Credential> &creds)
     else { cout << "None" << endl; }
 }
 
-static inline void print_op_status(bool success)
+static void print_op_status(bool success)
 {
     if (success) { cout << "Success" << endl; }
     else { cerr << "Failure" << endl; }
 }
 
-static inline secStr get_password()
+static secStr get_password()
 {
     bool echo = true;
     secStr pw;
@@ -85,7 +85,7 @@ static inline secStr get_password()
     return pw;
 }
 
-static inline void execute_action(cred_crypt_state &state)
+static void execute_action(cred_crypt_state &state)
 {
     bool success = true;
     secStr pw;
@@ -465,7 +465,7 @@ static inline void execute_action(cred_crypt_state &state)
     cout << endl;
 }
 
-static inline void parse_input(cred_crypt_state &state)
+static void parse_input(cred_crypt_state &state)
 {
     if (state.input_.size() > 0 && state.input_[0]->size() >=4)
     {

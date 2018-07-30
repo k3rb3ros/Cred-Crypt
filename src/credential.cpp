@@ -128,7 +128,6 @@ credential::credential(secStr& account_hex,
         pw_length_ = (pw_hex.size()/2);
 
         clearBuff((uint8_t*)hash_, HASH_BYTE_SIZE);
-        clearBuff((uint8_t*)id_, ID_BYTE_SIZE);
 
         //decode data inputs from hex to binary
         //hex_buffers contain 2x the byte length of original fields
@@ -138,7 +137,7 @@ credential::credential(secStr& account_hex,
         { hexDecode(desc_hex.byteStr(), description_.get(), desc_hex.size()); }
         hexDecode(uname_hex.byteStr(), username_.get(), uname_hex.size());
         hexDecode(pw_hex.byteStr(), password_.get(), pw_hex.size());
-        hexDecode(id_hex.byteStr(), (uint8_t*)id_, id_hex.size());
+        hexDecode(id_hex.byteStr(), reinterpret_cast<uint8_t*>(id_.getID()), id_hex.size());
         hexDecode(hash_hex.byteStr(), (uint8_t*)hash_, hash_hex.size());
 
         //check if stored hash matches the calculated one IFF this is true then this a valid credential
@@ -264,67 +263,6 @@ secStr credential::getUsernameStr()
     return Uname;
 }
 
-uint64_t* credential::getID()
-{
-    return id_;
-}
-
-/***********************
-* Comparison overloads *
-************************/
-inline bool credential::operator ==(nodeValueBase &rhs) const
-{
-    return &rhs == this;
-}
-
-inline bool credential::operator <(nodeValueBase &rhs)
-{
-    bool less_than = false;
-    uint64_t* rhs_id = rhs.getID();
-    uint64_t* lhs_id = this->getID();
-
-    for(size_t s=0; s<ID_WORD_SIZE; ++s)
-    {
-        if (lhs_id[s] < rhs_id[s])
-        {
-            less_than = true;
-            break;
-        }
-        else if(lhs_id[s] > rhs_id[s])
-        {
-            break;
-        }
-        //else lhs_id[s] == rhs_id[s] so search the next block down
-        assert(lhs_id[s] == rhs_id[s]);
-    }
-
-    return less_than;
-}
-
-inline bool credential::operator >(nodeValueBase &rhs)
-{
-    bool greater_than = false;
-    uint64_t* rhs_id = rhs.getID();
-    uint64_t* lhs_id = this->getID();
-
-    for(size_t s=0; s<ID_WORD_SIZE; ++s)
-    {
-        if (lhs_id[s] > rhs_id[s])
-        {
-            greater_than = true;
-            break;
-        }
-        else if(lhs_id[s] < rhs_id[s])
-        {
-            break;
-        }
-        //else lhs_id[s] == rhs_id[s] so search the next block down
-        assert(lhs_id[s] == rhs_id[s]);
-    }
-
-    return greater_than;
-}
-
 /*******************
 * Stream overloads *
 ********************/
@@ -364,8 +302,8 @@ ostream& operator <<(std::ostream &os, const credential &c)
         uint8_t* desc_hex = new uint8_t[(2*c.desc_length_)+1]();
         desc_hex[2*c.desc_length_] = 0; //null terminate the string
         os << "\"description\":\"" << hexEncode(c.description_.get(),
-                                              desc_hex,
-                                              c.desc_length_)
+                                                desc_hex,
+                                                c.desc_length_)
            << "\",";
 
         delete[] desc_hex;
@@ -380,8 +318,8 @@ ostream& operator <<(std::ostream &os, const credential &c)
         uname_hex[2*c.uname_length_] = 0; //null terminate the string
 
         os << "\"username\":\"" << hexEncode(c.username_.get(),
-                                           uname_hex,
-                                           c.uname_length_)
+                                             uname_hex,
+                                             c.uname_length_)
            << "\",";
 
         delete[] uname_hex;
@@ -403,7 +341,10 @@ ostream& operator <<(std::ostream &os, const credential &c)
 
     //id
     uint8_t id_hex[(2*HASH_BYTE_SIZE)+1] = { 0 };
-    os << "\"id\":\"" << hexEncode((uint8_t*)c.id_, id_hex, HASH_BYTE_SIZE) << "\",";
+    os << "\"id\":\"" << hexEncode(
+        reinterpret_cast<uint8_t*>(c.id_.getID()),
+        id_hex, HASH_BYTE_SIZE)
+       << "\",";
 
     //hash 
     uint8_t hash_hex[(2*HASH_BYTE_SIZE)+1] = { 0 };
@@ -450,7 +391,6 @@ credential::~credential()
     clearBuff(password_.get(), pw_length_);
     clearBuff(username_.get(), uname_length_);
     clearBuff((uint8_t*)hash_, HASH_BYTE_SIZE);
-    clearBuff((uint8_t*)id_, ID_BYTE_SIZE);
 
     acnt_length_ = 0;
     desc_length_ = 0;
@@ -532,7 +472,11 @@ bool credential::genId(secStr& account)
     if (account.size() > 0)
     {
 
-        if (skeinHash(account.byteStr(), account.size(), (uint8_t*)id_, (ID_BYTE_SIZE)))
+        if (skeinHash(
+              account.byteStr(),
+              account.size(), 
+              reinterpret_cast<uint8_t*>(id_.getID()),
+              (ID_BYTE_SIZE)))
         {
             success = true;
         }

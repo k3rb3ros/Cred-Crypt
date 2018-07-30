@@ -27,8 +27,8 @@
 #include "cryptoStructs.h" //key_pair type and skein_hash type
 #include "ctrMode.h" //ctrEncrypt() ctrDecrypt()
 #include "hash.h" //skeinHash()
+#include "identifier.hpp"
 #include "masterKey.hpp" //masterKey class
-#include "nodeValueBase.hpp" //nodeValueBase class
 #include "secureString.hpp" //secStr (secureString) class
 #include "skeinApi.h" //skein internal functions
 #include "util.h" //clearBuff() compareWordBuff(), hexEncode(), hexDecode(), isEmpty()
@@ -42,7 +42,7 @@ using std::copy;
 using std::ofstream;
 using std::unique_ptr;
 
-class credential : public nodeValueBase
+class credential
 {
     public:
     /***************
@@ -82,18 +82,17 @@ class credential : public nodeValueBase
     secStr getDescriptionStr();
     secStr getPasswordStr();
     secStr getUsernameStr();
-    uint64_t* getID();
 
     /***********************
     * Comparison overloads *
     ************************/
-    bool operator ==(nodeValueBase &other) const;
-    bool operator <(nodeValueBase &other);
-    bool operator >(nodeValueBase &other);
+    inline bool operator ==(credential &rhs) const { return id_ == rhs.id_; }
+    inline bool operator <(credential &rhs) const { return id_ < rhs.id_; }
+    inline bool operator >(credential &rhs) const { return id_ > rhs.id_; }
 
-    /*******************
-    * Stream overloads *
-    ********************/
+    /**************************
+    * Serialization overloads *
+    **************************/
     friend ostream& operator <<(ostream &os, const credential &cred);
     friend ostream& operator <<(ostream &os, const credential* cred);
 
@@ -108,6 +107,8 @@ class credential : public nodeValueBase
     ****************/
     const masterKey* master_key_;
     credentialKey derrived_key_;
+    uint64_t hash_[HASH_WORD_SIZE];
+    identifier id_;
     size_t acnt_length_;
     size_t desc_length_;
     size_t pw_length_;
@@ -116,8 +117,6 @@ class credential : public nodeValueBase
     unique_ptr<uint8_t[]> description_;
     unique_ptr<uint8_t[]> username_;
     unique_ptr<uint8_t[]> password_;
-    uint64_t hash_[HASH_WORD_SIZE];
-    uint64_t id_[ID_WORD_SIZE];
 
     /******************
     * private methods *

@@ -5,6 +5,8 @@
 
 #pragma once
 
+//TODO make all of these that aren't referenced in C code constexpr
+
 #ifdef __cplusplus
 extern "C"
 {

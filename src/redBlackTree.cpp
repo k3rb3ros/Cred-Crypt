@@ -92,11 +92,11 @@ void redBlackTree::verify_bst_preserved(redBlackTreeNode* node)
     if (node == nullptr) { return; }
     if (node->left() != nullptr)
     { 
-        assert(compareWordBuff(node->left()->getID(), node->getID(), ID_WORD_SIZE) < 0);
+        assert(node->left()->getID() < node->getID());
     }
     if (node->right() != nullptr)
     { 
-        assert(compareWordBuff(node->right()->getID(), node->getID(), ID_WORD_SIZE) > 0);
+        assert(node->right()->getID() > node->getID());
     }
 
     verify_bst_preserved(node->left());
@@ -104,16 +104,23 @@ void redBlackTree::verify_bst_preserved(redBlackTreeNode* node)
 }
 #endif
 
-bool redBlackTree::isLeafNode(redBlackTreeNode* node) { return node->left() == nullptr && node->right() == nullptr; }
+template <class DATA_TYPE>
+bool redBlackTree<DATA_TYPE>::isLeafNode(redBlackTreeNode<DATA_TYPE>* node) const
+{ return node->left() == nullptr && node->right() == nullptr; }
 
-inline color redBlackTree::nodeColor(redBlackTreeNode* node)
+template <class DATA_TYPE>
+inline color redBlackTree<DATA_TYPE>::nodeColor(redBlackTreeNode<DATA_TYPE>* node) const
 {
-    if (node == nullptr) { return BLACK; } //null nodes count as BLACK
+    if (node == nullptr) { return color::BLACK; } //null nodes count as BLACK
     //only RED and BLACK are valid colors anything else is invalid
-    return (node->color() == RED || node->color() == BLACK) ? node->color() : INVALID;
+    return (node->color() == color::RED || node->color() == color::BLACK) ?
+        node->color() : color::INVALID;
 }
 
-redBlackTreeNode* redBlackTree::insertHelper(redBlackTreeNode* node, redBlackTreeNode* new_node)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::insertHelper(
+    redBlackTreeNode<DATA_TYPE>* node,
+    redBlackTreeNode<DATA_TYPE>* new_node)
 {
     if (node == nullptr) //rb_tree_node doesn't yet exist so create it
     {
@@ -121,33 +128,34 @@ redBlackTreeNode* redBlackTree::insertHelper(redBlackTreeNode* node, redBlackTre
         this->size_++;
     }
     //if this isn't the node we are inserting
-    else if (compareWordBuff(new_node->getID(), node->getID(), ID_WORD_SIZE) != 0)
+    else if (new_node->getID() != node->getID())
     { 
-        rb_direction dir = (compareWordBuff(new_node->getID(), node->getID(), ID_WORD_SIZE) < 0)
-                            ? LEFT : RIGHT;
+        direction dir = (new_node->getID() < node->getID())
+            ? direction::LEFT : direction::RIGHT;
 
         node->link()[dir] = insertHelper(node->link()[dir], new_node);
 
         /**************************
          * Begin Rebalancing code *
          *************************/
-        if (nodeColor(node->link()[dir]) == RED)
+        if (nodeColor(node->link()[dir]) == color::RED)
         {
-            if ((nodeColor(node->link()[oppDir(dir)])) == RED)
+            if ((nodeColor(node->link()[oppDir(dir)])) == color::RED)
             {
                 //Case 1
-                node->color() = RED;
-                node->left()->color() = BLACK;
-                node->right()->color() = BLACK;
+                node->color() = color::RED;
+                node->left()->color() = color::BLACK;
+                node->right()->color() = color::BLACK;
             }
             else
             {
                 //Case 2
-                if (nodeColor(node->link()[dir]->link()[dir]) == RED)
+                if (nodeColor(node->link()[dir]->link()[dir]) == color::RED)
                 {
                     node = rbTreeSingleRotate(node, oppDir(dir));
                 }
-                else if (nodeColor(node->link()[dir]->link()[oppDir(dir)]) == RED) //Case 3
+                // Case 3
+                else if (nodeColor(node->link()[dir]->link()[oppDir(dir)]) == color::RED)
                 {
                     node = rbTreeDoubleRotate(node, oppDir(dir));
                 }
@@ -159,12 +167,14 @@ redBlackTreeNode* redBlackTree::insertHelper(redBlackTreeNode* node, redBlackTre
     }
     else //update an existing node in place (no tree rebalance necessary)
     {
-        assert(compareWordBuff(new_node->getID(), node->getID(), ID_WORD_SIZE) == 0);
+        assert(node == new_node);
 
+        //TODO finish me
         //swap the values between the new and the old node
-        nodeValueBase* prev_val = node->value();
-        *(node->value()) = *(new_node->value());
-        *(new_node->value()) = *(prev_val);
+        std::unique_ptr<redBlackTreeNode<DATA_TYPE>> prev_val = node->getData();
+        node->setData(new_node->getData());
+        //*(node->value()) = *(new_node->value());
+        //*(new_node->value()) = *(prev_val);
         //node->value() = value->value();
         //value->value() = prev_val;
 
@@ -174,9 +184,10 @@ redBlackTreeNode* redBlackTree::insertHelper(redBlackTreeNode* node, redBlackTre
     return node;
 }
 
-redBlackTreeNode* redBlackTree::searchNodeById(uint64_t* id)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::searchNodeById(const identifier_t* id) const
 {
-    redBlackTreeNode* search = nullptr;    
+    redBlackTreeNode<DATA_TYPE>* search = nullptr;    
 
     if (root_ != nullptr && id != nullptr)
     {
@@ -184,12 +195,15 @@ redBlackTreeNode* redBlackTree::searchNodeById(uint64_t* id)
 
         while (search != nullptr)
         {
-            if (compareWordBuff(search->getID(), id, ID_WORD_SIZE) == 0) { return search; } //found it
-            else if (compareWordBuff(search->getID(), id, ID_WORD_SIZE) > 0) //traverse left
+            // found it
+            if (compareWordBuff(search->getID(), id, ID_WORD_SIZE) == 0) { return search; }
+            // traverse left
+            else if (compareWordBuff(search->getID(), id, ID_WORD_SIZE) > 0)
             {
                 search = search->left();
             }
-            else //traverse right
+            // traverse right
+            else
             {
                 assert(compareWordBuff(search->getID(), id, ID_WORD_SIZE) < 0);
                 search = search->right();
@@ -200,9 +214,11 @@ redBlackTreeNode* redBlackTree::searchNodeById(uint64_t* id)
     return search;
 }
 
-redBlackTreeNode* redBlackTree::searchNode(redBlackTreeNode* node)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::searchNode(
+    redBlackTreeNode<DATA_TYPE>* node) const
 {
-    redBlackTreeNode* search = nullptr;
+    redBlackTreeNode<DATA_TYPE>* search = nullptr;
 
     if (root_ != nullptr && node != nullptr)
     {
@@ -213,11 +229,13 @@ redBlackTreeNode* redBlackTree::searchNode(redBlackTreeNode* node)
         {
             //found it
             if (compareWordBuff(search->getID(), node->getID(), ID_WORD_SIZE) == 0) { break; }
-            else if (compareWordBuff(search->getID(), node->getID(), ID_WORD_SIZE) > 0) //traverse left
+            // traverse left
+            else if (compareWordBuff(search->getID(), node->getID(), ID_WORD_SIZE) > 0)
             {
                 search = search->left();
             }
-            else //traverse right
+            // traverse right
+            else
             {
                 assert(compareWordBuff(search->getID(), tgt_id, ID_WORD_SIZE) < 0);
                 search = search->right();
@@ -228,16 +246,17 @@ redBlackTreeNode* redBlackTree::searchNode(redBlackTreeNode* node)
     return search;
 }
 
-void redBlackTree::deleteNodeInternal(redBlackTreeNode* node)
+template <class DATA_TYPE>
+void redBlackTree<DATA_TYPE>::deleteNodeInternal(redBlackTreeNode<DATA_TYPE>* node)
 {
     if (this->root_ != nullptr && node != nullptr)
     {
-        redBlackTreeNode head; /* False tree root */
-        redBlackTreeNode* q = nullptr; /* Helpers */
-        redBlackTreeNode* p = nullptr; /* Helpers */
-        redBlackTreeNode* g = nullptr; /* Helpers */
-        redBlackTreeNode* f = nullptr; /* Found item */
-        rb_direction dir = RIGHT;
+        redBlackTreeNode<DATA_TYPE> head; /* False tree root */
+        redBlackTreeNode<DATA_TYPE>* q = nullptr; /* Helpers */
+        redBlackTreeNode<DATA_TYPE>* p = nullptr; /* Helpers */
+        redBlackTreeNode<DATA_TYPE>* g = nullptr; /* Helpers */
+        redBlackTreeNode<DATA_TYPE>* f = nullptr; /* Found item */
+        direction dir = direction::RIGHT;
 
         /* Set up helpers */
         q = &head;
@@ -246,61 +265,64 @@ void redBlackTree::deleteNodeInternal(redBlackTreeNode* node)
         /* Search and push a red down */
         while (q->link()[dir] != nullptr)
         {
-            rb_direction last = dir;
+            direction last = dir;
 
             /* Update helpers */
             g = p;
             p = q;
             q = q->link()[dir];
-            dir = (compareWordBuff(q->getID(), node->getID(), ID_WORD_SIZE) < 0) ? RIGHT : LEFT;
+            dir = (q->getID() < node->getID()) ? direction::RIGHT : direction::LEFT;
 
             /* Save found node */
-            if (compareWordBuff(q->getID(), node->getID(), ID_WORD_SIZE) == 0)
+            if (q->getID() == node->getID())
             {
                 f = q;
             }
 
             /* Push the red node down */
-            if (!isLeafNode(q) && nodeColor(q) == BLACK && nodeColor(q->link()[dir]) == BLACK)
+            if (!isLeafNode(q) &&
+                nodeColor(q) == color::BLACK &&
+                nodeColor(q->link()[dir]) == color::BLACK)
             {
-                if (nodeColor(q->link()[oppDir(dir)]) == RED)
+                if (nodeColor(q->link()[oppDir(dir)]) == color::RED)
                 {
                     /* single rotation */
                     p = p->link()[last] = rbTreeSingleRotate(q, dir);
                 }
-                else if (nodeColor(q->link()[oppDir(dir)]) == BLACK)
+                else if (nodeColor(q->link()[oppDir(dir)]) == color::BLACK)
                 {
-                    redBlackTreeNode* s = p->link()[oppDir(last)];
+                    redBlackTreeNode<DATA_TYPE>* s = p->link()[oppDir(last)];
 
                     if (s != nullptr)
                     {
-                        if (nodeColor(s->link()[oppDir(last)]) == BLACK && nodeColor(s->link()[last]) == BLACK)
+                        if (nodeColor(s->link()[oppDir(last)]) == color::BLACK &&
+                            nodeColor(s->link()[last]) == color::BLACK)
                         {
                             /* Color flip */
-                            p->color() = BLACK;
-                            s->color() = RED;
-                            q->color() = RED;
+                            p->color() = color::BLACK;
+                            s->color() = color::RED;
+                            q->color() = color::RED;
                         }
                         else
                         {
-                            rb_direction dir2 = (g->right() == p) ? RIGHT : LEFT;
+                            direction dir2 = (g->right() == p) ? direction::RIGHT : direction::LEFT;
 
-                            if (nodeColor(s->link()[last]) == RED)
+                            if (nodeColor(s->link()[last]) == color::RED)
                             {
                                 /* double rotation */
                                 g->link()[dir2] = rbTreeDoubleRotate(p, dir2);
                             }
-                            else if (nodeColor(s->link()[oppDir(last)]) == RED)
+                            else if (nodeColor(s->link()[oppDir(last)]) == color::RED)
                             {
                                 /* single rotation */
                                 g->link()[dir2] = rbTreeSingleRotate(p, last);
                             }
 
                             /* Ensure correct coloring */
-                            q->color() = RED;
-                            g->link()[dir2]->color() = RED;
-                            g->link()[dir2]->left()->color() = BLACK;
-                            g->link()[dir2]->right()->color() = BLACK;
+                            q->color() = color::RED;
+                            g->link()[dir2]->color() = color::RED;
+                            g->link()[dir2]->left()->color() = color::BLACK;
+                            g->link()[dir2]->right()->color() = color::BLACK;
                         }
                     }
                 }
@@ -310,17 +332,13 @@ void redBlackTree::deleteNodeInternal(redBlackTreeNode* node)
         /* Replace and remove if found i.e. delete the node*/
         if (f != nullptr)
         {
-            nodeValueBase* d = f->value();
+            std::swap(f->getData(), q->getData());
 
-            *(f->value()) = *(q->value());
-            *(q->value()) = *d;
-
-            rb_direction p_link = p->right() == q ? RIGHT : LEFT;
-            rb_direction q_link = q->left() == nullptr ? RIGHT : LEFT;
+            direction p_link = p->right() == q ? direction::RIGHT : direction::LEFT;
+            direction q_link = q->left() == nullptr ? direction::RIGHT : direction::LEFT;
             p->link()[p_link] = q->link()[q_link];
 
             size_--; //decriment node count
-            delete q; //delete the node
         }
 
         /* Update root and make it black */
@@ -328,7 +346,7 @@ void redBlackTree::deleteNodeInternal(redBlackTreeNode* node)
 
         if (this->root_ != nullptr) //ensure root is black
         {
-            this->root_->color() = BLACK;
+            this->root_->color() = color::BLACK;
         }
     }
 
@@ -337,27 +355,34 @@ void redBlackTree::deleteNodeInternal(redBlackTreeNode* node)
     #endif
 }
 
-redBlackTreeNode* redBlackTree::rbTreeSingleRotate(redBlackTreeNode* node, rb_direction dir)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::rbTreeSingleRotate(
+    redBlackTreeNode<DATA_TYPE>* node,
+    direction dir)
 {
-    redBlackTreeNode* save = node->link()[oppDir(dir)];
+    redBlackTreeNode<DATA_TYPE>* save = node->link()[oppDir(dir)];
 
     node->link()[oppDir(dir)] = save->link()[dir];
     save->link()[dir] = node;
 
-    node->color() = RED;
-    save->color() = BLACK;
+    node->color() = color::RED;
+    save->color() = color::BLACK;
 
     return save;
 }
 
-redBlackTreeNode* redBlackTree::rbTreeDoubleRotate(redBlackTreeNode* node, rb_direction dir)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::rbTreeDoubleRotate(
+    redBlackTreeNode<DATA_TYPE>* node,
+    direction dir)
 {
     node->link()[oppDir(dir)] = rbTreeSingleRotate(node->link()[oppDir(dir)], oppDir(dir));
 
     return rbTreeSingleRotate(node, dir);
 }
 
-void redBlackTree::teardown(redBlackTreeNode* node)
+template <class DATA_TYPE>
+void redBlackTree<DATA_TYPE>::teardown(redBlackTreeNode<DATA_TYPE>* node)
 {
     #ifdef DBG_RBTREE
     cout << "teardown called on " << node << endl;
@@ -373,36 +398,34 @@ void redBlackTree::teardown(redBlackTreeNode* node)
         teardown(node->right());
         node->right() = nullptr;
     }
-
-    delete node;
 }
 
-redBlackTree::redBlackTree() : root_(nullptr), size_(0) 
-{ /*nop*/ }
-
-size_t redBlackTree::size()
+template <class DATA_TYPE>
+size_t redBlackTree<DATA_TYPE>::size() const
 {
     return size_;
 }
 
-redBlackTreeNode* redBlackTree::searchByHex(secStr &id_hex)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::searchByHex(secStr &id_hex) const
 {
-    redBlackTreeNode* search = nullptr;
+    redBlackTreeNode<DATA_TYPE>* search = nullptr;
 
     uint64_t id[ID_WORD_SIZE] = { 0 };
-    hexDecode(id_hex.byteStr(), (uint8_t*)id, id_hex.size());
+    hexDecode(id_hex.byteStr(), reinterpret_cast<uint8_t*>(id), id_hex.size());
 
     search = searchNodeById(id);
 
     return search;
 }
 
-redBlackTreeNode* redBlackTree::searchByHash(secStr &str)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::searchByHash(secStr &str) const
 {
-    redBlackTreeNode* search = nullptr;
+    redBlackTreeNode<DATA_TYPE>* search = nullptr;
     uint64_t id[ID_WORD_SIZE] = { 0 };
 
-    if (skeinHash(str.byteStr(), str.size(), (uint8_t*)id, (ID_BYTE_SIZE)))
+    if (skeinHash(str.byteStr(), str.size(), reinterpret_cast<uint8_t*>(id), (ID_BYTE_SIZE)))
     {
         search = searchNodeById(id);
     }
@@ -410,9 +433,10 @@ redBlackTreeNode* redBlackTree::searchByHash(secStr &str)
     return search != nullptr ? search : nullptr;
 }
 
-vector<redBlackTreeNode*> redBlackTree::listNodes()
+template <class DATA_TYPE>
+vector<redBlackTreeNode<DATA_TYPE>*> redBlackTree<DATA_TYPE>::listNodes() const
 {
-    vector<redBlackTreeNode*> nodes(size_);
+    vector<redBlackTreeNode<DATA_TYPE>*> nodes(size_);
     size_t index = 0;
 
     inOrderTraversal(root_, nodes, index);
@@ -420,9 +444,11 @@ vector<redBlackTreeNode*> redBlackTree::listNodes()
     return nodes;
 }
 
-redBlackTreeNode* redBlackTree::inOrderTraversal(redBlackTreeNode* node,
-                                                 vector<redBlackTreeNode*> &storage,
-                                                 size_t &index)
+template <class DATA_TYPE>
+redBlackTreeNode<DATA_TYPE>* redBlackTree<DATA_TYPE>::inOrderTraversal(
+    redBlackTreeNode<DATA_TYPE>* node,
+    vector<redBlackTreeNode<DATA_TYPE>*> &storage,
+    size_t &index) const
 {
     if (node != nullptr)
     {
@@ -438,30 +464,34 @@ redBlackTreeNode* redBlackTree::inOrderTraversal(redBlackTreeNode* node,
     return nullptr;
 }
 
-void redBlackTree::deleteByHex(secStr &id_hex)
+template <class DATA_TYPE>
+void redBlackTree<DATA_TYPE>::deleteByHex(secStr &id_hex)
 {
     deleteNodeInternal(searchByHex(id_hex));
 }
 
-void redBlackTree::deleteByHash(secStr &str)
+template <class DATA_TYPE>
+void redBlackTree<DATA_TYPE>::deleteByHash(secStr &str)
 {
     deleteNodeInternal(searchByHash(str));
 }
 
-void redBlackTree::deleteNode(redBlackTreeNode* node)
+template <class DATA_TYPE>
+void redBlackTree<DATA_TYPE>::deleteNode(redBlackTreeNode<DATA_TYPE>* node)
 {
     deleteNodeInternal(node);
 }
 
-void redBlackTree::insertNode(redBlackTreeNode* node)
+template <class DATA_TYPE>
+void redBlackTree<DATA_TYPE>::insertNode(std::unique_ptr<redBlackTreeNode<DATA_TYPE>> node)
 {
     if (node != nullptr)
     {
         /* Insert helper starts at root and recursively adds the node and adjusts the tree as
          * necessary, returning the new root
          */
-        this->root_ = insertHelper(this->root_, node);
-        this->root_->color() = BLACK; //root should always be black
+        root_ = insertHelper(this->root_, node);
+        root_->color() = color::BLACK; //root should always be black
     }
     
     #ifdef VERIFY_RBTREE
@@ -469,11 +499,10 @@ void redBlackTree::insertNode(redBlackTreeNode* node)
     #endif
 } 
 
-redBlackTree::~redBlackTree()
+template <class DATA_TYPE>
+redBlackTree<DATA_TYPE>::~redBlackTree()
 {
     #ifdef DBG_RBTREE
     cout << "RBTree destructor" << endl;
     #endif
-    teardown(root_);
 }
- 
