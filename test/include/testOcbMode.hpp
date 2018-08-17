@@ -3,9 +3,9 @@
 #include <cstdint> //uint_xx types
 #include <cstdio> //memcpy
 #include "gtest/gtest.h" //testing::Test class
-#include "src_header/constants.h" //compile time constants
-#include "src_header/ocbMode.h" //all exposed ocb mode functions
-#include "src_header/util.h" //flipBit()
+#include "constants.h" //compile time constants
+#include "ocbMode.h" //all exposed ocb mode functions
+#include "util.h" //flipBit()
 
 class unitTestOcbMode : public ::testing::Test
 {

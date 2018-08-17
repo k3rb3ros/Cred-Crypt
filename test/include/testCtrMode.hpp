@@ -1,12 +1,11 @@
-#ifndef TESTCTRMODE_HPP
-#define TESTCTRMODE_HPP
+#pragma once
 
 #include <memory> //unique_ptr
 #include <stdio.h> //memcpy(), memcmp()
 #include <string.h> //strcpy() //strlen()
 #include "gtest/gtest.h"
-#include "src_header/constants.h"
-#include "src_header/ctrMode.h"
+#include "constants.h"
+#include "ctrMode.h"
 
 using std::unique_ptr;
 
@@ -25,7 +24,4 @@ class unitTestCtrMode : public ::testing::Test
     * Test fixture set up an tear down *
     ***********************************/
     virtual void SetUp();
-    //virtual void TearDown();
 };
-
-#endif

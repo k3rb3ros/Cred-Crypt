@@ -5,7 +5,7 @@
 #include <array>
 #include <cstdint>
 
-typedef uint64_t identifier_t[ID_WORD_SIZE];
+typedef std::array<uint64_t, ID_WORD_SIZE> identifier_t;
 
 /*
  * This object is essentially a giant unsigned integer used to store unique identifiers
@@ -18,7 +18,7 @@ class identifier
 
     inline bool operator ==(identifier &rhs) const
     {
-      for(uint_fast8_t i=0; i<ID_WORD_SIZE; ++i)
+      for (uint_fast8_t i=0; i<id_.size(); ++i)
       {
         if (id_[i] != rhs.id_[i]) { return false; }
       }
@@ -30,7 +30,27 @@ class identifier
     {
       bool is_less_than = false;
 
-      for(uint_fast8_t i=0; i<ID_WORD_SIZE; ++i)
+      for (uint_fast8_t i=0; i<id_.size(); ++i)
+      {
+        if (id_[i] < rhs.id_[i])
+        {
+          is_less_than = true;
+          break;
+        }
+        else if (id_[i] < rhs.id_[i])
+        {
+          break;
+        }
+      }
+
+      return is_less_than;
+    };
+
+    inline bool operator <(const identifier &rhs) const
+    {
+      bool is_less_than = false;
+
+      for (uint_fast8_t i=0; i<id_.size(); ++i)
       {
         if (id_[i] < rhs.id_[i])
         {
@@ -50,7 +70,7 @@ class identifier
     {
       bool is_greater_than = false;
 
-      for (uint_fast8_t i=0; i<ID_WORD_SIZE; ++i)
+      for (uint_fast8_t i=0; i<id_.size(); ++i)
       {
         if (id_[i] > rhs.id_[i])
         {
@@ -66,12 +86,12 @@ class identifier
       return is_greater_than;
     }
 
-    inline identifier_t* getID() const
+    inline identifier_t& data() const
     {
-      return &id_; 
+      return id_;
     }
     
     private:
 
-    mutable identifier_t id_;
+    mutable identifier_t id_{};
 };

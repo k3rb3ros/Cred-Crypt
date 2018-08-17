@@ -22,7 +22,6 @@ set (cred_crypt_cpp_src
      parser.cpp
      masterKey.cpp
      random.cpp 
-     redBlackTree.cpp
      secureString.cpp
      timer.cpp
     )
