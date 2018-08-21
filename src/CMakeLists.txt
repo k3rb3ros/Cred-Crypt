@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 2.6)
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 #C files for LibCredCrypt
-set (cred_crypt_c_src
+set (CRED_CRYPT_C_SRC
      ctrMode.c
      hash.c
      ocbMode.c
@@ -11,7 +11,7 @@ set (cred_crypt_c_src
     )
 
 #CPP files for LibCredCrypt
-set (cred_crypt_cpp_src
+set (CRED_CRYPT_CPP_SRC
      api.cpp
      credCryptImpl.cpp
      credential.cpp
@@ -27,14 +27,14 @@ set (cred_crypt_cpp_src
     )
 
 #C files for Skein
-set (skein_src
+set (SKEIN_SRC
      skeinBlockNo3F.c
      skein.c
      skeinApi.c
     )
 
 #C files for Threefish
-set (threefish_src
+set (THREEFISH_SRC
      threefishApi.c
      threefish256Block.c
      threefish512Block.c
@@ -42,36 +42,36 @@ set (threefish_src
     )
 
 #C files for LibScrypt_KDF
-set (scrypt_src
+set (SCRYPT_SRC
      endianConvert.c
      pbkdf2Skein512.c
      scrypt.c
     )
 
 #LibcJSON
-set (cjson_src
+set (CJSON_SRC
      cJSON.c)
 
 #LibCredCrypt
-set (credcrypt_src ${cred_crypt_c_src} ${cred_crypt_cpp_src})
+set (CREDCRYPT_SRC ${CRED_CRYPT_C_SRC} ${CRED_CRYPT_CPP_SRC})
 
 #LibSkein3Fish
-set (s3f_src ${skein_src} ${threefish_src})
+set (S3F_SRC ${SKEIN_SRC} ${THREEFISH_SRC})
 
 #CPP files for executable
-set (test_src
+set (TEST_SRC
      testMain.cpp
     )
 
 #CPP files for executable
-set (cli_src
+set (CLI_SRC
      cli.cpp
     )
 
-add_library (cJSON SHARED ${cjson_src})
-add_library (CredCrypt SHARED ${credcrypt_src})
-add_library (scrypt_KDF SHARED ${scrypt_src})
-add_library (skein3fish SHARED ${s3f_src})
+add_library (cJSON SHARED ${CJSON_SRC})
+add_library (CredCrypt SHARED ${CREDCRYPT_SRC})
+add_library (scrypt_KDF SHARED ${SCRYPT_SRC})
+add_library (skein3fish SHARED ${S3F_SRC})
 
 set_target_properties (cJSON PROPERTIES VERSION ${CJSONVERSION}
                        SOVERSION ${CJSONSOVERSION})
@@ -85,8 +85,8 @@ set_target_properties (scrypt_KDF PROPERTIES VERSION ${SCRYPTVERSION}
 set_target_properties (skein3fish PROPERTIES VERSION ${S3FVERSION}
                        SOVERSION ${S3FSOVERSION})
 
-add_executable ("API_Test" ${test_src})
-add_executable (${PROJECT_NAME} ${cli_src})
+add_executable ("API_Test" ${TEST_SRC})
+add_executable (${PROJECT_NAME} ${CLI_SRC})
 
 target_link_libraries ("API_Test"  cJSON CredCrypt scrypt_KDF skein3fish ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries (${PROJECT_NAME}  cJSON CredCrypt scrypt_KDF skein3fish ${CMAKE_THREAD_LIBS_INIT})

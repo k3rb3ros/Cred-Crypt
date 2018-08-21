@@ -15,6 +15,7 @@ class identifier
 {
     public:
     identifier() = default;
+    explicit identifier(const uint64_t id) { id_[0] = id; }
 
     inline bool operator ==(identifier &rhs) const
     {

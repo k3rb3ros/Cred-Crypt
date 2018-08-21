@@ -11,17 +11,20 @@ set (TEST_SRC
      testMain.cpp
     )
 
+set (APP_DIR "../src")
+
 #CPP files tested
 set (APP_CPP_SRC
-     src/secureString.cpp
+    "${APP_DIR}/secureString.cpp"
     )
+
 
 #C files tested
 set (APP_C_SRC
-     src/ctrMode.c
-     src/hash.c
-     src/ocbMode.c
-     src/util.c
+    "${APP_DIR}/ctrMode.c"
+    "${APP_DIR}/hash.c"
+    "${APP_DIR}/ocbMode.c"
+    "${APP_DIR}/util.c"
     )
 
 set (S3F_LIB_SRC ${SKEIN_SRC} ${THREEFISH_SRC})

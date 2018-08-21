@@ -32,14 +32,14 @@ class registry
         return data_.find(id != data_.end());
     }
 
-    DATA_TYPE* search_data(const identifier& id)
+    DATA_TYPE* search(const identifier& id)
     {
         DATA_TYPE* result = nullptr;
 
         const auto search = data_.find(id);
         if (search != data_.end())
         {
-            result = search.get();
+            result = &*(search->second);
         }
 
         return result;
