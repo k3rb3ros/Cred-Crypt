@@ -8,7 +8,7 @@
 #include <utility>
 
 /*
- * This class provides a searchable storage source for credentials
+ * This class provides a searchable storage source for arbitrary objects
  */
 
 using std::map;
@@ -22,14 +22,20 @@ class registry
     public:
     registry() = default;
 
-    inline bool delete_data(const identifier& id)
+    inline bool erase(const identifier& id)
     {
-        return data_.erase(id) > 0;
+        const auto delete_me = data_.find(id);
+        if (delete_me != data_.end())
+        {
+            data_.erase(delete_me);
+            return true;
+        }
+        return false;
     }
 
     inline bool exists(const identifier& id) const
     {
-        return data_.find(id != data_.end());
+        return (data_.find(id) != data_.end());
     }
 
     DATA_TYPE* search(const identifier& id)
@@ -47,17 +53,17 @@ class registry
 
     size_t size() const { return data_.size(); }
 
-    vector<DATA_TYPE*> traverse_data() const
+    vector<DATA_TYPE*> traverse() const
     {
-        vector<DATA_TYPE> traverse(data_.size(), nullptr);
+        vector<DATA_TYPE*> nodes(data_.size(), nullptr);
 
         size_t index = 0;
         for (auto &n: data_)
         {
-            traverse[index++] = n.get();
+            nodes[index++] = n.second.get();
         }
 
-        return traverse;
+        return nodes;
     }
 
     inline void insert_data(unique_ptr<DATA_TYPE> data)

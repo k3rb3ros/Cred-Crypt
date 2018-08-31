@@ -5,7 +5,8 @@
 #include <array>
 #include <cstdint>
 
-typedef std::array<uint64_t, ID_WORD_SIZE> identifier_t;
+using identifier_t = std::array<uint64_t, ID_WORD_SIZE>;
+using identifier_data_t = uint64_t;
 
 /*
  * This object is essentially a giant unsigned integer used to store unique identifiers
@@ -87,9 +88,9 @@ class identifier
       return is_greater_than;
     }
 
-    inline identifier_t& data() const
+    inline identifier_data_t* data() const
     {
-      return id_;
+      return id_.data();
     }
     
     private:

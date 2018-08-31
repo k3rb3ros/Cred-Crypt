@@ -8,8 +8,8 @@
 class testNode
 {
     private:
-    identifier id_;
-    uint64_t val_;
+    identifier id_{};
+    uint64_t val_{0};
 
     public:
     /**************
