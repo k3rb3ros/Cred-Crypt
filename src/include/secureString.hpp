@@ -8,32 +8,31 @@
 * Secure Strings are stored internally as uint8_t arrays they make no guarantee that internal
 * characters will be in the ascii range and non NULL.
 * This allows encrypted text to be stored in Secure Strings.
-* It also prevents c_str methods from being able to be used with secure strings or SecureString
+* It also prevents c_str methods from being able to be used with secStr
 * from being converted (directly) into c_str(s).
 */
 
+#include <algorithm>
 #include <cassert> //assert()
+#include <cstdint> //uintxx_t types
 #include <iostream> //std::ostream class
 #include <memory> //std::unique_ptr
 #include <stdexcept> //std::out_of_range exception
 #include <string> //std::string class
 #include <utility> //std::exchange class, std::swap
 #include <vector> //std::vector container
-#include "stdint.h" //uintxx_t types
-#include "util.h" //clearBuff(), resize()
 
-using std::bad_alloc;
+using std::copy;
 using std::istream;
-using std::make_shared;
+using std::make_unique;
 using std::ostream;
 using std::out_of_range;
-using std::shared_ptr;
 using std::string;
 using std::swap;
 using std::unique_ptr;
 using std::vector;
 
-enum splitState
+enum class splitState
 {
     DEFAULT,
     IN_DB_QUOTE,
@@ -46,8 +45,8 @@ class secStr
     /***************
     * private data *
     ***************/
-    size_t size_;
-    unique_ptr<uint8_t[]> str_;
+    size_t size_{0};
+    unique_ptr<uint8_t[]> str_{nullptr};
 
     void stripEscapedQuotes(secStr &str);
 
@@ -57,7 +56,7 @@ class secStr
     ***************/
     explicit secStr(); //empty string
     explicit secStr(const char* c_str); //copy from c_str
-    explicit secStr(const uint8_t* c_str, size_t size); //copy from byte array
+    explicit secStr(const uint8_t* c_str, const size_t size); //copy from byte array
     explicit secStr(const string); //copy from std::string
     secStr(const secStr &rhs); //copy from secStr
 
@@ -97,8 +96,8 @@ class secStr
     secStr substr(const size_t start, const size_t len) const;
     size_t size() const;
     uint8_t* byteStr();
-    vector<shared_ptr<secStr>> split(const uint8_t delim) const;
-    vector<shared_ptr<secStr>> splitWQuotes(const uint8_t delim) const;
+    vector<secStr> split(const uint8_t delim) const;
+    vector<secStr> splitWQuotes(const uint8_t delim) const;
 
     /************************************
     * out of class comparison overloads *

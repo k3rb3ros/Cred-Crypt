@@ -17,7 +17,7 @@ extern "C"
 /****************************
 * Hex Encoding lookup table *
 ****************************/
-typedef struct 
+typedef struct
 {
     uint8_t hex;
     uint8_t byte;

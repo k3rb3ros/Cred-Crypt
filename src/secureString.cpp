@@ -1,15 +1,20 @@
 #include "include/secureString.hpp"
 
-secStr::secStr() : size_(0), str_(nullptr)
-{
-    /* nop */
-}
+using std::bad_alloc;
+using std::copy;
+using std::fill;
+using std::make_unique;
+using std::out_of_range;
+using std::swap;
 
-secStr::secStr(const char* c_str) : size_(0), str_(nullptr)
+secStr::secStr()
+{}
+
+secStr::secStr(const char* c_str)
 {
     if (c_str != nullptr)
     {
-        //get the size of the c_str
+        // get the size of the c_str
         while (c_str[size_] != '\0')
         {
             size_++;
@@ -17,69 +22,59 @@ secStr::secStr(const char* c_str) : size_(0), str_(nullptr)
 
         if (size_ > 0)
         {
-            //allocate storage of the size of the c_str passed in
-            str_ = unique_ptr<uint8_t[]>(new uint8_t[size_+1]());
-        }
-
-        //copy the c_str to the byte array
-        for (size_t sz=0; sz<size_; ++sz)
-        {
-            str_[sz] = c_str[sz]; 
+            // allocate storage of the size of the c_str passed in
+            str_ = make_unique<uint8_t[]>(size_ + 1);
+            // copy the c_str to the byte array
+            copy(c_str, (c_str + size_), str_.get());
+            // null terminate the string
+            str_[size_] = 0;
         }
     }
 }
 
-secStr::secStr(const uint8_t* bytes, size_t size) : size_(size),
-    str_(new uint8_t[size+1]())
+secStr::secStr(const uint8_t* bytes, const size_t size) : size_(size)
 {
     if (bytes != nullptr && size > 0)
     {
-        for (size_t sz=0; sz<size_; ++sz)
-        {
-            str_[sz] = bytes[sz];
-        }
+        str_ = make_unique<uint8_t[]>(size);
+        copy(bytes, (bytes + size), str_.get());
     }
 }
 
-secStr::secStr(const string str) : size_(str.size()),
-    str_(new uint8_t[size_+1]())
+secStr::secStr(const string str) : size_(str.size())
 {
-    if (str.size() > 0)
+    if (size_ > 0)
     {
-        const char* c_str = str.c_str(); //get acces to the raw string in the str class
-
-        for (size_t sz=0; sz<size_; ++sz) //copy the string into the byte_array
-        {
-            str_[sz] = c_str[sz];
-        }
+        str_ = make_unique<uint8_t[]>(size_);
+        copy(str.begin(), str.end(), str_.get());
     }
 }
 
 /* copy constructor */
-secStr::secStr(const secStr &rhs) : size_(rhs.size_),
-    str_(new uint8_t[size_+1]())
+secStr::secStr(const secStr &rhs) : size_(rhs.size_)
 {
     if (size_ > 0)
     {
-        for (size_t sz=0; sz<size_; ++sz) { str_[sz] = rhs.str_[sz]; }
+        str_ = make_unique<uint8_t[]>(size_);
+        copy(rhs.str_.get(), (rhs.str_.get() + rhs.size_), str_.get());
     }
 }
 
 int_fast8_t secStr::compare(const char* c_str) const
 {
-    size_t i = 0;
+    size_t sz = 0;
 
-    while (i < size_ && c_str[i] != '\0') //iterate through the strings while they match
+    while (sz < size_ && c_str[sz] != '\0') //iterate through the strings while they match
     {
-        if (this->str_[i] < c_str[i]) { return -1; }
-        if (this->str_[i] > c_str[i]) { return 1; }
-        ++i;
+        if (this->str_[sz] < c_str[sz]) { return -1; }
+        if (this->str_[sz] > c_str[sz]) { return 1; }
+        ++sz;
     }
-    
-    //at this point the strings are either the same string or the same up until this point but 2 different lengths
-    //check if the strings differ in size
-    if (c_str[i] != '\0') { return -1; } //c_str longer then secStr
-    if (this->str_[i] != '\0') { return 1; } //secStr longer then c_str 
+
+    // at this point the strings are either the same string or the same up until this point but 2 different lengths
+    // check if the strings differ in size
+    if (sz > size_) { return -1; } //c_str longer then secStr
+    if (sz < size_) { return 1; } //secStr longer then c_str
 
     return 0;
 }
@@ -128,7 +123,7 @@ bool secStr::operator ==(const secStr &rhs) const
     {
         if (str_[sz] != rhs.str_[sz]) { return false; }
     }
-    
+
     return true;
 }
 
@@ -160,7 +155,7 @@ secStr& secStr::operator =(const secStr& rhs)
         {
             if (str_ != nullptr && size_ > 0)
             {
-                clearBuff(str_.get(), size_);
+                fill(str_.get(), (str_.get() + size_), 0);
                 size_ = 0;
             }
 
@@ -184,7 +179,7 @@ secStr& secStr::operator =(const string& rhs)
     {
         if (str_ != nullptr && size_ > 0)
         {
-            clearBuff(str_.get(), size_);
+            fill(str_.get(), (str_.get() + size_), 0);
             size_ = 0;
         }
 
@@ -207,7 +202,7 @@ secStr& secStr::operator =(string& rhs)
     {
         if (str_ != nullptr && size_ > 0)
         {
-            clearBuff(str_.get(), size_);
+            fill(str_.get(), (str_.get() + size_), 0);
             size_ = 0;
         }
 
@@ -231,9 +226,9 @@ secStr& secStr::operator =(secStr&& rhs)
     //delete the existing strings contents and swap the str_ pointer with the new one
     if (str_ != nullptr && size_ > 0)
     {
-        clearBuff(str_.get(), size_);
+        fill(str_.get(), (str_.get() + size_), 0);
     }
-    
+
     //swap the pointers to the content and adjust the size
     swap(str_, rhs.str_);
     rhs.str_ = nullptr;
@@ -300,7 +295,7 @@ istream& getline(istream& is, secStr& str, const uint8_t delim)
     is.get(); //eat the newline character
 
     str = secStr(bfr, index);
-    clearBuff(bfr, bfr_size);
+    fill(bfr, (bfr + bfr_size), 0);
     free(bfr);
 
     return is;
@@ -334,11 +329,11 @@ size_t secStr::size() const { return size_; }
 
 uint8_t* secStr::byteStr() { return (size_ == 0) ? nullptr : str_.get(); }
 
-vector<shared_ptr<secStr>> secStr::split(const uint8_t delim = '\n') const
+vector<secStr> secStr::split(const uint8_t delim = '\n') const
 {
     size_t start = 0;
     size_t offset = 0;
-    vector<shared_ptr<secStr>> split;
+    vector<secStr> split;
 
     while (offset < size_)
     {
@@ -347,21 +342,21 @@ vector<shared_ptr<secStr>> secStr::split(const uint8_t delim = '\n') const
         //move offset until its pointing to the next instance of delim
         while (str_[offset] != delim && offset < (size_)) { offset++; }
         //split the substring and store it
-        split.push_back(make_shared<secStr>(substr(start, (offset-start))));
+        split.push_back(substr(start, (offset-start)));
         start = offset++;
     }
 
     return split;
 }
 
-vector<shared_ptr<secStr>> secStr::splitWQuotes(const uint8_t delim) const
+vector<secStr> secStr::splitWQuotes(const uint8_t delim) const
 {
     // escaped double quotes \" do not get split on like regular double quotes
     assert(delim != '"'); //doesn't work for splititng on " since they are handled differently
     size_t start = 0;
     size_t offset = 1;
-    splitState state = DEFAULT;
-    vector<shared_ptr<secStr>> split;
+    splitState state = splitState::DEFAULT;
+    vector<secStr> split;
 
     if (size_ < 2) { return split; } //we can't split an array with > 2 characters in it
 
@@ -369,58 +364,58 @@ vector<shared_ptr<secStr>> secStr::splitWQuotes(const uint8_t delim) const
     {
         switch (state)
         {
-            case DEFAULT:
+            case splitState::DEFAULT:
                 // an instance of delim
                 if (str_[start] == delim ||
                    (start == 0 && str_[start] != '"'))
                 {
                     if (str_[start] == delim) { ++start; } //eat the delim character
-                    state = IN_WORD;
+                    state = splitState::IN_WORD;
                     continue;
-                } //a non escaped double quote
+                } // a non escaped double quote
                 else if ((start == 0 && str_[start] == '"') ||
                          (str_[start] == '"' && str_[start-1] != '\\'))
                 {
                     if (str_[start] == '"') { ++start; } //eat the " character
-                    state = IN_DB_QUOTE;
+                    state = splitState::IN_DB_QUOTE;
                     continue;
                 }
             break;
-            case IN_DB_QUOTE:
-                //advance until we find another non escaped dbl quote or the end of the string
+            case splitState::IN_DB_QUOTE:
+                // advance until we find another non escaped dbl quote or the end of the string
                 while (offset < size_ &&
                       (((str_[offset] != '"')) ||
                       (str_[offset] == '"' && str_[offset-1] == '\\')))
                 { offset++; }
 
-                //split the substring
-                split.push_back(make_shared<secStr>(substr(start, (offset-start))));
+                // split the substring
+                split.push_back(substr(start, (offset-start)));
                 if (str_[offset] == '"') { ++offset; }; //eat the trailing "
-                state = DEFAULT;
+                state = splitState::DEFAULT;
             break;
-            case IN_WORD:
-                //advance until we find delim, an unescaped double quote or the end of the string
+            case splitState::IN_WORD:
+                // advance until we find delim, an unescaped double quote or the end of the string
                 while (offset < size_ &&
                        str_[offset] != delim &&
                        (str_[offset] != '"' || (offset > 0 && str_[offset] == '"' && str_[offset-1] == '\\')))
                 {
                     offset++;
-                } //end while
+                } // end while
 
                 if ((str_[offset] == '"' && offset == 0) ||
                 (str_[offset] == '"' && str_[offset-1] != '\\'))
                 {
                     ++offset; //eat the the trailing "
-                    state = IN_DB_QUOTE;
+                    state = splitState::IN_DB_QUOTE;
                 }
                 else if (str_[offset] == delim)
                 {
-                    state = DEFAULT;
+                    state = splitState::DEFAULT;
                 }
 
                 if (str_[start] != delim && str_[start] != '"')
                 {
-                    split.push_back(make_shared<secStr>(substr(start, (offset-start))));
+                    split.push_back(substr(start, (offset-start)));
                 }
             default:
             break;
@@ -461,7 +456,8 @@ istream& operator >>(istream& is, secStr &rhs)
     if (is)
     {
         size_t start = is.tellg();
-        clearBuff(rhs.str_.get(), rhs.size_); //clear any existing content
+        // clear the existing contents of the string
+        fill(rhs.byteStr(), (rhs.byteStr() + rhs.size_), 0);
         is.seekg(0, is.end);
         size_t end = is.tellg();
         is.seekg(start);
@@ -496,6 +492,6 @@ secStr::~secStr() noexcept
 {
     if (str_.get() != nullptr)
     {
-        clearBuff(str_.get(), size_); //zero fill the string
+        fill(str_.get(), (str_.get() + size_), 0);
     }
  }

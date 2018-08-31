@@ -100,9 +100,6 @@ TEST(unitTestSecureString, StdStringInitSavesStrWOutNull)
     }
 }
 
-//TODO compare tests
-/* compare tests */
-
 /* Operator tests */
 TEST(unitTestSecureString, EQCmprOP)
 {
@@ -117,6 +114,7 @@ TEST(unitTestSecureString, EQCmprOP)
     ASSERT_FALSE(not_equal);
 }
 
+/* compare tests */
 TEST(unitTestSecureString, LTCmprOP)
 {
     secStr one("1");
@@ -356,8 +354,6 @@ TEST(unitTestSecureString, NonEmptyStringRetsCorrectSize)
     ASSERT_EQ(the_eighties.size(), 28ULL);
 }
 
-//TODO byteStr tests
-
 TEST(unitTestSecureString, SplitSplitsOnWhiteSpace)
 {
     secStr space_sep_words("Shout Shout Let It All Out");
@@ -365,12 +361,12 @@ TEST(unitTestSecureString, SplitSplitsOnWhiteSpace)
 
     ASSERT_EQ(split.size(), 6ULL);
     //These assume compare is working correctly
-    ASSERT_EQ(split[0]->compare("Shout"), 0LL);
-    ASSERT_EQ(split[1]->compare("Shout"), 0LL);
-    ASSERT_EQ(split[2]->compare("Let"), 0LL);
-    ASSERT_EQ(split[3]->compare("It"), 0LL);
-    ASSERT_EQ(split[4]->compare("All"), 0LL);
-    ASSERT_EQ(split[5]->compare("Out"), 0LL);
+    ASSERT_EQ(split[0].compare("Shout"), 0);
+    ASSERT_EQ(split[1].compare("Shout"), 0);
+    ASSERT_EQ(split[2].compare("Let"), 0);
+    ASSERT_EQ(split[3].compare("It"), 0);
+    ASSERT_EQ(split[4].compare("All"), 0);
+    ASSERT_EQ(split[5].compare("Out"), 0);
 }
 
 TEST(unitTestSecureString, EmptyOutStreamOPEmpty)
@@ -402,10 +398,10 @@ TEST(unitTestSecureString, DestructorClearsStringData)
 {
     std::string msg = "Super secret message that I don't want to be in memory after this object goes out of scope";
     secStr* tstMsg = new secStr(msg);
-    size_t sz = tstMsg->size(); //get the length of the string
+    const size_t sz = tstMsg->size(); //get the length of the string
 
     //This will be a deliberate dangling reference
-    uint8_t* content = tstMsg->byteStr();
+    const uint8_t* content = tstMsg->byteStr();
     //delete the secStr calling its destructor that should zero out all the data in the string
     delete tstMsg;
 

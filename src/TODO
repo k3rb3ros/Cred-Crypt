@@ -1,10 +1,7 @@
-templatize RedBlackTree
-create a CTRP RedBlackTree<credential> class
 get rid of all new/deletes
 Write full coverage of unit test for secureString that prove it behaves similarly to a std::string #MOSTLY DONE#
 Add support for google mocks
 Update unit test for ctr mode
-Write unit tests for RedBlackTree #STARTED#
 Write unit tests for credential class
 Fix TODOs throughout the code base
 Fix FIXMEs throughtout the code base
