@@ -12,8 +12,7 @@
 #include "masterKey.hpp"  //masterKey class
 #include "ocbMode.h" //ocbSetup(), ocbEncrypt()
 #include "parser.hpp" //parser class
-#include "redBlackTree.hpp" //redBlackTree class
-#include "redBlackTreeNode.hpp" //redBlackTreeNode
+#include "registry.hpp" //registry class
 #include "secureString.hpp" //secureString class
 #include "timer.hpp" //timer class
 #include "util.h" //hexEncode()
@@ -24,24 +23,24 @@ using std::ifstream;
 using std::stringstream;
 using std::vector;
 
-struct Credential
+struct credential_data final
 {
-    secStr account;
-    secStr description;
-    secStr user_name;
-    secStr password;
+    secStr account{};
+    secStr description{};
+    secStr user_name{};
+    secStr password{};
 };
 
-struct credCryptImpl
+class credCryptImpl final
 {
     public:
 
-    bool clean_;
-    std::chrono::duration<unsigned int> timeout_;
-    keyChecker checker_;
-    masterKey master_key_;
-    redBlackTree tree_;
-    secStr cred_file_;
+    bool clean_{true};
+    std::chrono::duration<unsigned int> timeout_{};
+    keyChecker checker_{};
+    masterKey master_key_{};
+    registry<credential> reg_;
+    secStr cred_file_{};
     timer timer_;
 
     credCryptImpl();
@@ -49,16 +48,16 @@ struct credCryptImpl
 
     bool clearCredentials();
 
-    bool credentialIsValid(const Credential& cred) const;
+    bool credentialIsValid(const credential_data& cred) const;
 
     bool deleteCredential(secStr& acnt);
 
-    bool insertCredential(Credential& cred);
+    bool insertcredential(credential_data& cred);
 
     //TODO add error string vector
-    bool getCredentials(vector<Credential>& creds, const bool pw);
+    bool getCredentials(vector<credential_data>& creds, const bool pw);
 
-    bool getCredential(secStr& acnt, Credential& cred, const bool pw);
+    bool getCredential(secStr& acnt, credential_data& cred, const bool pw);
 
     bool getPassword(secStr& acnt, secStr& pw);
 
@@ -68,5 +67,5 @@ struct credCryptImpl
     //TODO add error string vector
     bool saveCredentialsToFile(secStr& f_name);
 
-    bool updateCredential(Credential& cred);
+    bool updateCredential(credential_data& cred);
 };

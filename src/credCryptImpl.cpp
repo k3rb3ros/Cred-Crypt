@@ -12,18 +12,14 @@ credCryptImpl::~credCryptImpl()
 
 bool credCryptImpl::clearCredentials()
 {
-    bool success = false;
-
-    vector<redBlackTreeNode*> nodes = tree_.listNodes();
+    auto nodes = reg_.traverse();
 
     for (auto &it : nodes)
     {
-        tree_.deleteNode(it);
+        reg_.erase(it->getIdentifier());
     }
 
-    if (tree_.size() == 0) { success = true; }
-
-    return success;
+    return reg_.size() == 0;
 }
 
 //The current valid rule is that a credential must have at least an account name, username and password
@@ -36,12 +32,12 @@ bool credCryptImpl::deleteCredential(secStr& acnt)
 {
     bool success = false;
 
-    size_t start_size = tree_.size();
+    size_t start_size = reg_.size();
 
     if (start_size > 0)
     {
-        tree_.deleteByHash(acnt);
-        if (tree_.size() == (start_size-1)) { success = true; }
+        reg_.deleteByHash(acnt);
+        if (reg_.size() == (start_size-1)) { success = true; }
     }
 
     return success;
@@ -75,8 +71,7 @@ bool credCryptImpl::insertCredential(Credential& cred)
         //Need a better check to ensure credential got inserted into tree not just created
         if (cred_obj != nullptr)
         {
-            redBlackTreeNode* node = new redBlackTreeNode(cred_obj);
-            tree_.insertNode(node);
+            reg_.insert(make_unique<credential>(cred_obj));
             clean_ = false;
             success = true;
         }
@@ -85,63 +80,50 @@ bool credCryptImpl::insertCredential(Credential& cred)
     return success;
 }
 
-bool credCryptImpl::getCredentials(vector<Credential>& creds, const bool pw)
+bool credCryptImpl::getCredentials(vector<credential_data>& creds, const bool pw)
 {
     timer_.reset();
     bool success = false;
-    //get a vector of ptrs to all creds in the tree
-    vector<redBlackTreeNode*> nodes = tree_.listNodes();
+    auto nodes = reg_.traverse();
 
-    if (nodes.size() == tree_.size())
+    if (nodes.size() == reg_.size())
     {
-        for (auto &it : nodes)
+        for (auto &cred : nodes)
         {
-            credential* int_cred = (credential*)(it->value());
-            //TODO add a better check here
-            if (int_cred != nullptr)
-            {
-                //populate an external credential and fill the fields
-                Credential ext_cred;
+            //populate an external credential and fill the fields
+            credential_data data{};
 
-                ext_cred.account = int_cred->getAccountStr();
-                ext_cred.description = int_cred->getDescriptionStr();
-                ext_cred.user_name = int_cred->getUsernameStr();
-                if (pw) { ext_cred.password = int_cred->getPasswordStr(); }
+            data.account = cred->getAccountStr();
+            data.description = cred->getDescriptionStr();
+            data.user_name = cred->getUsernameStr();
+            if (pw) { data.password = cred->getPasswordStr(); }
 
-                creds.push_back(ext_cred);
+            creds.push_back(data);
 
-                success = true;
-            }
+            success = true;
         }
 
         //returning an empty vector for an empty tree is considered success
-        if (tree_.size() == 0) { success = true; }
+        if (reg_.size() == 0) { success = true; }
     }
 
     return success;
 }
 
-bool credCryptImpl::getCredential(secStr& acnt, Credential& cred, const bool pw)
+bool credCryptImpl::getCredential(secStr& acnt, credential_data& cred, const bool pw)
 {
     timer_.reset();
     bool success = false;
-    credential* found_cred = nullptr;
-    redBlackTreeNode* node = tree_.searchByHash(acnt);
-
-    //return true if the node exists
-    if (node != nullptr && node->value() != nullptr)
-    {
-        found_cred = (credential*)node->value();
-    }
+    auto node = reg_.search(acnt);
 
     //We can only fill the credential structure if we have a valid master key
-    if (found_cred != nullptr && master_key_.isValid())
+    if (node != nullptr && master_key_.isValid())
     {
-        cred.account = found_cred->getAccountStr();
-        cred.description = found_cred->getDescriptionStr();
-        cred.user_name = found_cred->getUsernameStr();
+        cred.account = node->getAccountStr();
+        cred.description = node->getDescriptionStr();
+        cred.user_name = node->getUsernameStr();
         //only populate pw if it was asked for
-        if (pw) { cred.password = found_cred->getPasswordStr(); }
+        if (pw) { cred.password = node->getPasswordStr(); }
 
         if (cred.account.size() > 0) { success = true; }
     }
@@ -226,11 +208,11 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
 
         if (P.errorsOccured())
         {
-            vector<shared_ptr<secStr>> errors = P.getErrors();
+            auto errors = P.getErrors();
 
             for (auto &it : errors)
             {
-                cerr << "ERROR: " << *it << endl;
+                cerr << "ERROR: " << it << endl;
             }
         }
         //insert the parsed credentials into the tree
@@ -239,10 +221,11 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
             auto to_load = P.getParsedCredentials();
             for (auto &it: to_load)
             {
-                size_t start_size = tree_.size();
+                size_t start_size = reg_.size();
+                auto node = FINISH ME
                 redBlackTreeNode* node = new redBlackTreeNode(it);
-                tree_.insertNode(node);
-                if (tree_.size() != (start_size + 1)) //sanity check
+                reg_.insertNode(node);
+                if (reg_.size() != (start_size + 1)) //sanity check
                 {
                     cerr << "ERROR: inserting credential into tree" << endl;
                     delete node;

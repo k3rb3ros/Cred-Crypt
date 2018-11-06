@@ -1,20 +1,17 @@
 #pragma once
 
+#include <cstddef> //size_t
+#include <cstring> //strncmp()
 #include <iostream> //std::istream class
 #include <memory> //std::unique_ptr
-#include <stddef.h> //size_t
-#include <string.h> //strncmp()
 #include <vector> //std::vector container
 #include "cJSON.h" //cJSON parser
 #include "credential.hpp" //credential class
 #include "masterKey.hpp" //masterKey class
-#include "nodeValueBase.hpp" //nodeValueBase class
 #include "secureString.hpp" //secStr class
 
 using std::ios_base;
 using std::istream;
-using std::make_shared;
-using std::shared_ptr;
 using std::unique_ptr;
 using std::vector;
 
@@ -44,7 +41,7 @@ class parser
 
     size_t numCredentialsParsed();
 
-    vector<shared_ptr<secStr>> getErrors();
+    vector<secStr> getErrors();
 
     vector<credential*>& getParsedCredentials();
 
@@ -62,11 +59,11 @@ class parser
     /***************
     * private data *
     ***************/
-    const masterKey* mk_;
-    unique_ptr<char[]> input_;
-    cJSON* output_;
-    vector<credential*> creds_;
-    vector<shared_ptr<secStr>> errors_;
+    const masterKey* mk_{nullptr};
+    unique_ptr<char[]> input_{};
+    cJSON* output_{nullptr};
+    vector<credential*> creds_{};
+    vector<secStr> errors_{};
 
     /******************
     * private methods *

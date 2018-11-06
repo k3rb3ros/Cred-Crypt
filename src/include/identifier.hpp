@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.h"
+#include "secureString.hpp"
 
 #include <array>
 #include <cstdint>
@@ -16,6 +17,8 @@ class identifier
 {
     public:
     identifier() = default;
+
+    // used for testing
     explicit identifier(const uint64_t id) { id_[0] = id; }
 
     inline bool operator ==(identifier &rhs) const
@@ -92,7 +95,7 @@ class identifier
     {
       return id_.data();
     }
-    
+
     private:
 
     mutable identifier_t id_{};

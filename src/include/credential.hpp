@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <array> //std::array
 #include <cassert> //assert
 #include <cstring> //memcpy()
 #include <iostream> //std::ofstream object
@@ -38,9 +39,13 @@
 using std::cout;
 using std::endl;
 #endif
+using std::array;
 using std::copy;
+using std::make_unique;
 using std::ofstream;
 using std::unique_ptr;
+
+using skein_512_hash = array<uint64_t, HASH_WORD_SIZE>;
 
 class credential
 {
@@ -60,7 +65,7 @@ class credential
                secStr& password,
                const masterKey* master_key);
 
-    /*imported from existing (values already encrypted)*/ 
+    /*imported from existing (values already encrypted)*/
     credential(secStr& account_hex,
                secStr& desc_hex,
                secStr& uname_hex,
@@ -78,6 +83,9 @@ class credential
     bool updateDescription(secStr& description);
     bool updatePassword(secStr& password);
     bool updateUsername(secStr& username);
+
+    const identifier& getIdentifier() const { return id_; };
+
     secStr getAccountStr();
     secStr getDescriptionStr();
     secStr getPasswordStr();
@@ -105,18 +113,18 @@ class credential
     /***************
     * private data *
     ****************/
-    const masterKey* master_key_;
+    const masterKey* master_key_{nullptr};
     credentialKey derrived_key_;
-    uint64_t hash_[HASH_WORD_SIZE];
-    identifier id_;
-    size_t acnt_length_;
-    size_t desc_length_;
-    size_t pw_length_;
-    size_t uname_length_;
-    unique_ptr<uint8_t[]> account_;
-    unique_ptr<uint8_t[]> description_;
-    unique_ptr<uint8_t[]> username_;
-    unique_ptr<uint8_t[]> password_;
+    array<uint64_t, HASH_WORD_SIZE> hash_{};
+    identifier id_{};
+    size_t acnt_len_{0};
+    size_t desc_len_{0};
+    size_t uname_len_{0};
+    size_t pw_len_{0};
+    unique_ptr<uint8_t[]> account_{nullptr};
+    unique_ptr<uint8_t[]> description_{nullptr};
+    unique_ptr<uint8_t[]> username_{nullptr};
+    unique_ptr<uint8_t[]> password_{nullptr};
 
     /******************
     * private methods *
@@ -153,6 +161,8 @@ class credential
     bool updateField(secStr &new_val,
                      unique_ptr<uint8_t[]> &field,
                      size_t &field_len);
+
+
     //TODO benchmark this against inplace Decryption/Encryption and replace if inplace is faster
     /* Generic that returns byte[] pointer to the decrypted contents of a field
      * Only works if the master key is valid (and correct)
@@ -163,7 +173,7 @@ class credential
 
     #ifdef DBG_CRED
     /*
-    * Print the hex encoding off all fields in a credential to stdout for 
+    * Print the hex encoding off all fields in a credential to stdout for
     * debugging purposes.
     */
     void debugCredential() const;
@@ -172,5 +182,5 @@ class credential
     /*
     * Get the Skein hash of accout, description, password and username
     */
-    void hashCredential(skein_hash &buf);
+    void hashCredential(skein_512_hash &buf);
 };

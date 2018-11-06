@@ -12,7 +12,7 @@ TEST(unitTestRegistry, CanInsertNode)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(42);
-    reg.insert_data(std::move(node));
+    reg.insert(std::move(node));
 
     ASSERT_EQ(1UL, reg.size());
 }
@@ -21,7 +21,7 @@ TEST(unitTestRegistry, CanLookUpNode)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(69);
-    reg.insert_data(std::move(node));
+    reg.insert(std::move(node));
 
     ASSERT_TRUE(reg.search(identifier{69}) != nullptr);
 }
@@ -32,8 +32,8 @@ TEST(unitTestRegistry, SearchReturnsNullptrWhenNodeDoesntExist)
     unique_ptr<testNode> node = make_unique<testNode>(1);
     unique_ptr<testNode> node1 = make_unique<testNode>(1000);
 
-    reg.insert_data(std::move(node));
-    reg.insert_data(std::move(node1));
+    reg.insert(std::move(node));
+    reg.insert(std::move(node1));
 
     ASSERT_TRUE(reg.search(identifier{50}) == nullptr);
 }
@@ -43,7 +43,7 @@ TEST(unitTestRegistry, SearchReturnsNodeWhenExists)
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(14);
 
-    reg.insert_data(std::move(node));
+    reg.insert(std::move(node));
 
     ASSERT_TRUE(reg.search(identifier{14}) != nullptr);
 }
@@ -59,7 +59,7 @@ TEST(unitTestRegistry, ExistsReturnsTrueForInsertedNode)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(3);
-    reg.insert_data(std::move(node));
+    reg.insert(std::move(node));
 
     ASSERT_TRUE(reg.exists(identifier{3}));
 }
@@ -75,7 +75,7 @@ TEST(unitTestRegistry, DeleteRemovesNodeFromRegistry)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(420);
-    reg.insert_data(std::move(node));
+    reg.insert(std::move(node));
 
     ASSERT_EQ(1UL, reg.size());
     ASSERT_TRUE(reg.erase(identifier{420}));
@@ -98,7 +98,7 @@ TEST(unitTestRegistry, TraverseReturnsSortedVectorOfNodesWhenTheyExist)
     for (uint64_t i=100; i>0; --i)
     {
         unique_ptr<testNode> node = make_unique<testNode>(i);
-        reg.insert_data(std::move(node));
+        reg.insert(std::move(node));
     }
 
     // traverse the registry
@@ -123,7 +123,7 @@ TEST(unitTestRegistry, RegistryCanHandleOverOneHundredThousandNodes)
     for (uint64_t i=100000; i>0; --i)
     {
         unique_ptr<testNode> node = make_unique<testNode>(i);
-        reg.insert_data(std::move(node));
+        reg.insert(std::move(node));
     }
 
     // verify there are 100000 nodes

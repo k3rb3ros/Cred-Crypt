@@ -66,7 +66,7 @@ class registry
         return nodes;
     }
 
-    inline void insert_data(unique_ptr<DATA_TYPE> data)
+    inline void insert(unique_ptr<DATA_TYPE> data)
     {
         data_[data->get_id()] = move(data);
     }

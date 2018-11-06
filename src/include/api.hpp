@@ -22,7 +22,7 @@ class credCrypt
     //As a user I want to be able to input my master password and generate my master key
     //As a user I want to be able to know if the password I inputted is correct
     bool inputPassword(secStr& pw);
-    
+
     //As a user I want to know if I need to input my password to use the credential manager
     bool keyIsValid();
 
@@ -55,7 +55,7 @@ class credCrypt
     //As a user I want to be able to save a secure representation of my passwords to the file
     // of my choosing
     void saveCredentialsToFile(secStr& f_name);
-   
+
     private:
 
     credCryptImpl impl_;

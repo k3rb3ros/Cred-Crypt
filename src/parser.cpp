@@ -1,11 +1,6 @@
 #include "include/parser.hpp"
 
-parser::parser(const masterKey* mk):
-    mk_(mk),
-    input_(nullptr),
-    output_(nullptr),
-    creds_(vector<credential*>()),
-    errors_(vector<shared_ptr<secStr>>())
+parser::parser(const masterKey* mk): mk_(mk)
 {
 }
 
@@ -23,7 +18,7 @@ bool parser::errorsOccured() { return errors_.size() > 0; }
 
 vector<credential*>& parser::getParsedCredentials() { return creds_; }
 
-vector<shared_ptr<secStr>> parser::getErrors() { return errors_; }
+vector<secStr> parser::getErrors() { return errors_; }
 
 size_t parser::numCredentialsParsed() { return creds_.size(); }
 
@@ -52,13 +47,13 @@ void parser::parse()
         }
         else
         {
-            auto parse_error = make_shared<secStr>("Error parsing JSON");
+            auto parse_error = secStr("Error parsing JSON");
             errors_.push_back(parse_error);
         }
     }
     else
     {
-        auto no_input = make_shared<secStr>("No input to parse");
+        auto no_input = secStr("No input to parse");
         errors_.push_back(no_input);
     }
 }
@@ -162,7 +157,7 @@ inline void parser::parseInternal()
                         delete cred;
                         cred = nullptr;
                     }
-                    auto cred_err = make_shared<secStr>("A credential failed its hash check and was not loaded");
+                    auto cred_err = secStr("A credential failed its hash check and was not loaded");
                     errors_.push_back(cred_err);
                 }
             }
