@@ -1,5 +1,6 @@
 get rid of all new/deletes
 Write full coverage of unit test for secureString that prove it behaves similarly to a std::string #MOSTLY DONE#
+Add tests for identifier
 Add support for google mocks
 Update unit test for ctr mode
 Write unit tests for credential class

@@ -1,4 +1,6 @@
 #include "include/credCryptImpl.hpp"
+#include "ocbMode.h" //ocbSetup(), ocbEncrypt()
+#include "util.h" //hexEncode()
 
 credCryptImpl::credCryptImpl() : clean_(true), timeout_(30), timer_(timeout_)
 {
@@ -23,9 +25,9 @@ bool credCryptImpl::clearCredentials()
 }
 
 //The current valid rule is that a credential must have at least an account name, username and password
-bool credCryptImpl::credentialIsValid(const Credential& cred) const
+bool credCryptImpl::credentialIsValid(const credentialData& cred) const
 {
-    return (cred.account.size() > 0 && cred.user_name.size() > 0 && cred.password.size() > 0);
+    return (credentialData::isValid(cred));
 }
 
 bool credCryptImpl::deleteCredential(secStr& acnt)
@@ -36,51 +38,30 @@ bool credCryptImpl::deleteCredential(secStr& acnt)
 
     if (start_size > 0)
     {
-        reg_.deleteByHash(acnt);
-        if (reg_.size() == (start_size-1)) { success = true; }
+        success = reg_.erase(identifier{acnt});
     }
 
     return success;
 }
 
-bool credCryptImpl::insertCredential(Credential& cred)
+bool credCryptImpl::insertCredential(credentialData& cred)
 {
     timer_.reset();
     bool success = false;
 
-    if (cred.account.size() > 0 && master_key_.isValid())
+    if (credentialData::isValid(cred) && master_key_.isValid())
     {
-        credential* cred_obj = nullptr;
-
-        //all cred parameters filled
-        if (cred.description.size() > 0 && cred.user_name.size() > 0 &&
-            cred.password.size() > 0)
-        {
-            cred_obj = new credential(cred.account, cred.description,
-                                      cred.user_name, cred.password,
-                                      &master_key_);
-        }
-        //description not provided but all other parameters filled
-        else if(cred.description.size() == 0 && cred.user_name.size() > 0 &&
-                cred.password.size() > 0)
-        {
-            cred_obj = new credential(cred.account, cred.user_name,
-                                      cred.password, &master_key_);
-        }
-
-        //Need a better check to ensure credential got inserted into tree not just created
-        if (cred_obj != nullptr)
-        {
-            reg_.insert(make_unique<credential>(cred_obj));
-            clean_ = false;
-            success = true;
-        }
+        //TODO fix me
+        auto fuck = credential{cred, master_key_};
+        //reg_.insert(make_unique<credential>(nullptr);
+        clean_ = false;
+        success = true;
     }
 
     return success;
 }
 
-bool credCryptImpl::getCredentials(vector<credential_data>& creds, const bool pw)
+bool credCryptImpl::getCredentials(vector<credentialData>& creds, const bool pw)
 {
     timer_.reset();
     bool success = false;
@@ -91,12 +72,12 @@ bool credCryptImpl::getCredentials(vector<credential_data>& creds, const bool pw
         for (auto &cred : nodes)
         {
             //populate an external credential and fill the fields
-            credential_data data{};
+            credentialData data{};
 
-            data.account = cred->getAccountStr();
-            data.description = cred->getDescriptionStr();
-            data.user_name = cred->getUsernameStr();
-            if (pw) { data.password = cred->getPasswordStr(); }
+            data.account_ = cred->getAccountStr();
+            data.description_ = cred->getDescriptionStr();
+            data.username_ = cred->getUsernameStr();
+            if (pw) { data.password_ = cred->getPasswordStr(); }
 
             creds.push_back(data);
 
@@ -110,22 +91,22 @@ bool credCryptImpl::getCredentials(vector<credential_data>& creds, const bool pw
     return success;
 }
 
-bool credCryptImpl::getCredential(secStr& acnt, credential_data& cred, const bool pw)
+bool credCryptImpl::getCredential(secStr& acnt, credentialData& cred, const bool pw)
 {
     timer_.reset();
     bool success = false;
-    auto node = reg_.search(acnt);
+    auto search = reg_.search(identifier{acnt});
 
     //We can only fill the credential structure if we have a valid master key
-    if (node != nullptr && master_key_.isValid())
+    if (search != nullptr && master_key_.isValid())
     {
-        cred.account = node->getAccountStr();
-        cred.description = node->getDescriptionStr();
-        cred.user_name = node->getUsernameStr();
+        cred.account_ = search->getAccountStr();
+        cred.description_ = search->getDescriptionStr();
+        cred.username_ = search->getUsernameStr();
         //only populate pw if it was asked for
-        if (pw) { cred.password = node->getPasswordStr(); }
+        if (pw) { cred.password_ = search->getPasswordStr(); }
 
-        if (cred.account.size() > 0) { success = true; }
+        if (cred.account_.size() > 0) { success = true; }
     }
 
     return success;
@@ -135,14 +116,13 @@ bool credCryptImpl::getPassword(secStr& acnt, secStr& pw)
 {
     timer_.reset();
     bool success = false;
-    credential* cred = nullptr;
-    redBlackTreeNode* node = tree_.searchByHash(acnt);
 
-    if (node != nullptr && node->value() != nullptr && master_key_.isValid())
+    auto search = reg_.search(identifier{acnt});
+
+    if (search != nullptr && master_key_.isValid())
     {
-        cred = (credential*)node->value();
-        pw = cred->getPasswordStr();
-        success = true;
+        pw = search->getPasswordStr();
+        success = pw.size() > 0;
     }
 
     return success;
@@ -156,7 +136,7 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
 
     ifstream ifs((char*)f_name.byteStr(), ios_base::in|ios_base::binary);
 
-    if (ifs.is_open())
+    if (ifs && ifs.is_open())
     {
         headerReader HR(&master_key_);
         parser P(&master_key_);
@@ -175,12 +155,13 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
                 checker_.hashKey((uint64_t*)master_key_.keyBytes(), KEY_WORD_SIZE) &&
                 ocbSetup(&ctx,
                          (uint64_t*)master_key_.keyBytes(),
-                         (uint64_t*)master_key_.saltBytes()))
+                         (uint64_t*)master_key_.saltBytes())
+               )
             {
                 timer_.reset(); //headerIsValid sets the masterKey on success
                 //read then buffer the credential data
                 const uint64_t data_size = HR.getCredsSize();
-                unique_ptr<uint8_t[]> enc_data(new uint8_t[data_size]());
+                unique_ptr<uint8_t[]> enc_data = make_unique<uint8_t[]>(data_size);
                 ifs.read((char*)enc_data.get(), data_size); //read the encrypted credential
                 secStr cred_data((uint8_t*)enc_data.get(), data_size);
                 clearBuff(enc_data.get(), data_size);
@@ -189,7 +170,8 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
                 if (ocbDecrypt(&ctx,
                                cred_data.byteStr(),
                                cred_data.byteStr(),
-                               cred_data.size()))
+                               cred_data.size())
+                   )
                 { //decrypt the credentials then try to parse them
                     cred_data >> P;
                     P.parse();
@@ -218,27 +200,26 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
         //insert the parsed credentials into the tree
         if (P.numCredentialsParsed() > 0)
         {
-            auto to_load = P.getParsedCredentials();
-            for (auto &it: to_load)
+            //TODO fix me
+            /*
+            auto creds_to_insert = P.getParsedCredentials();
+            for (auto &cred: creds_to_insert)
             {
                 size_t start_size = reg_.size();
-                auto node = FINISH ME
-                redBlackTreeNode* node = new redBlackTreeNode(it);
-                reg_.insertNode(node);
+                reg_.insert(move(cred));
                 if (reg_.size() != (start_size + 1)) //sanity check
                 {
                     cerr << "ERROR: inserting credential into tree" << endl;
-                    delete node;
-                    node = nullptr;
                 }
             }
+            */
 
             //keep the salt we just loaded from getting cleared on the next pw enter
             clean_ = false;
             timer_.reset();
 
-            if (tree_.size() > 0) { clean_ = false; }
-            if (P.numCredentialsParsed() == tree_.size()) { success = true; }
+            if (reg_.size() > 0) { clean_ = false; }
+            if (P.numCredentialsParsed() == reg_.size()) { success = true; }
         }
         ifs.close();
     }
@@ -251,7 +232,7 @@ bool credCryptImpl::saveCredentialsToFile(secStr& f_name)
     timer_.reset();
     bool success = false;
     headerWriter HW(&master_key_);
-    auto creds = tree_.listNodes();
+    auto creds = reg_.traverse();
 
     if (creds.size() > 0 && master_key_.isValid() && HW.isValid())
     {
@@ -269,7 +250,7 @@ bool credCryptImpl::saveCredentialsToFile(secStr& f_name)
             ss << "{";
             for (size_t s=0; s<creds.size(); ++s)
             {
-                ss << "\"credential" << s+1 << "\":" << (credential*)creds[s]->value();
+                ss << "\"credential" << s+1 << "\":" << (credential*)creds[s];
                 if (s != (creds.size()-1)) { ss << ","; }
             }
             ss << "}";
@@ -311,37 +292,36 @@ bool credCryptImpl::saveCredentialsToFile(secStr& f_name)
 /* this will be faster then inserting a new credential over the top of an existing one in cases
  * where we are only updating one or two fields
  */
-bool credCryptImpl::updateCredential(Credential& cred)
+bool credCryptImpl::updateCredential(credentialData& cred)
 {
     timer_.reset();
     bool success = false;
 
     //only continue if the credential exists
-    if (cred.account.size() > 0 &&
-       (cred.user_name.size() > 0 ||
-        cred.description.size() > 0 ||
-        cred.password.size() > 0))
+    if (cred.account_.size() > 0 &&
+       (cred.username_.size() > 0 ||
+        cred.description_.size() > 0 ||
+        cred.password_.size() > 0))
     {
-        auto node = tree_.searchByHash(cred.account);
-        credential* cred_to_update = (credential*)node->value();
-        if (node != nullptr && cred_to_update != nullptr)
+        auto search = reg_.search(identifier{cred.account_});
+        if (search != nullptr)
         {
             bool op_success = true;
             /* update any non empty string fields in the Credential
             * If any update operation reports failure then stop any other updates and report
             * the failure
             */
-            if (cred.description.size() > 0 && op_success)
+            if (cred.description_.size() > 0 && op_success)
             {
-                op_success = cred_to_update->updateDescription(cred.description);
+                op_success = search->updateDescription(cred.description_);
             }
-            if (cred.password.size() > 0 && op_success)
+            if (cred.password_.size() > 0 && op_success)
             {
-                op_success = cred_to_update->updatePassword(cred.password);
+                op_success = search->updatePassword(cred.password_);
             }
-            if (cred.user_name.size() > 0 && op_success)
+            if (cred.username_.size() > 0 && op_success)
             {
-                op_success = cred_to_update->updateUsername(cred.user_name);
+                op_success = search->updateUsername(cred.username_);
             }
 
             if (op_success) { success = true; }

@@ -7,7 +7,7 @@
 #include <cstdint>
 
 using identifier_t = std::array<uint64_t, ID_WORD_SIZE>;
-using identifier_data_t = uint64_t;
+using id_data_t = uint64_t;
 
 /*
  * This object is essentially a giant unsigned integer used to store unique identifiers
@@ -16,7 +16,11 @@ using identifier_data_t = uint64_t;
 class identifier
 {
     public:
+    // create an empty identifier to be filled by the consumer
     identifier() = default;
+
+    // create an identifier skein512 hashed from the key
+    identifier(secStr& key);
 
     // used for testing
     explicit identifier(const uint64_t id) { id_[0] = id; }
@@ -91,7 +95,7 @@ class identifier
       return is_greater_than;
     }
 
-    inline identifier_data_t* data() const
+    inline id_data_t* data() const
     {
       return id_.data();
     }

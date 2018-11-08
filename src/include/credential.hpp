@@ -5,8 +5,8 @@
 * Description any optional information that might be relevant to authenticate to* the account.
 * Username the username needed to authenticate the account.
 * Password the password needed to authenticate to the account.
-* All credential information is stored in an encrypted form so a memory dump of the running program won't reveal any sensative account information. 
-* Account, Description, Password, Username are encrypted with CTR_THREEFISH_512 
+* All credential information is stored in an encrypted form so a memory dump of the running program won't reveal any sensative account information.
+* Account, Description, Password, Username are encrypted with CTR_THREEFISH_512
 * The low level credential key is made by xoring the credential salt with the master key
 * The password is protected by the high level credential key which is generated
 * by stretching the low level key through the scrypt key derrivation function.
@@ -24,6 +24,7 @@
 #include <stddef.h> //size_t
 #include <stdint.h> //uintxx_t types
 #include "constants.h" //ID_WORD_SIZE, ID_BYTE_SIZE
+#include "credentialData.hpp" //credentialData class
 #include "credentialKey.hpp" //credentialKey class
 #include "cryptoStructs.h" //key_pair type and skein_hash type
 #include "ctrMode.h" //ctrEncrypt() ctrDecrypt()
@@ -53,27 +54,33 @@ class credential
     /***************
     * constructors *
     ****************/
-    /*new*/
-    credential(secStr& account,
-               secStr& username,
-               secStr& password,
-               const masterKey* master_key);
+    credential() = delete;
 
-    credential(secStr& account,
-               secStr& description,
-               secStr& username,
-               secStr& password,
-               const masterKey* master_key);
+    /*new*/
+    explicit credential(secStr& account,
+                        secStr& username,
+                        secStr& password,
+                        const masterKey* master_key);
+
+    explicit credential(secStr& account,
+                        secStr& description,
+                        secStr& username,
+                        secStr& password,
+                        const masterKey* master_key);
+
+    /* syntactic sugar to call above constructor */
+    explicit credential(credentialData& raw_cred,
+                        const masterKey* master_key);
 
     /*imported from existing (values already encrypted)*/
-    credential(secStr& account_hex,
-               secStr& desc_hex,
-               secStr& uname_hex,
-               secStr& pw_hex,
-               secStr& id_hex,
-               secStr& hash_hex,
-               secStr& salt_hex,
-               const masterKey* master_key);
+    explicit credential(secStr& account_hex,
+                        secStr& desc_hex,
+                        secStr& uname_hex,
+                        secStr& pw_hex,
+                        secStr& id_hex,
+                        secStr& hash_hex,
+                        secStr& salt_hex,
+                        const masterKey* master_key);
 
     /*****************
     * public methods *
@@ -147,15 +154,6 @@ class credential
      * encrypt the given value returns true if the operation succeeded
      */
     bool encryptValue(uint8_t* value, const size_t byte_size, credentialKey* key);
-
-    /*
-    * The id is the skein512 hash of the decrypted account name,
-    * storing this allows comparisons to be made of credentials without any decryption
-    * or underlaying knowledge of the credential structure.
-    * If the account name changes then it is a different credential so we don't support
-    * doing this.
-    */
-    bool genId(secStr& account);
 
     /* Generic update reduces code duplication*/
     bool updateField(secStr &new_val,

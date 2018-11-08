@@ -10,6 +10,7 @@ credential::credential(secStr& account,
                       ):
     master_key_{master_key},
     derrived_key_(master_key_),
+    id_{account},
     acnt_len_{account.size()},
     uname_len_{username.size()},
     pw_len_{password.size()},
@@ -36,7 +37,6 @@ credential::credential(secStr& account,
 
                 derrived_key_.clearKey(); //clear the derrived key
                 hashCredential(hash_); //update the credential hash
-                genId(account); //generate the id
             }
         }
     }
@@ -52,7 +52,9 @@ credential::credential(secStr& account,
                        secStr& password,
                        const masterKey* master_key
                       ):
-    master_key_(master_key), derrived_key_(master_key_),
+    master_key_(master_key),
+    derrived_key_(master_key_),
+    id_{account},
     acnt_len_{account.size()},
     desc_len_{description.size()},
     uname_len_{username.size()},
@@ -82,7 +84,6 @@ credential::credential(secStr& account,
 
                 derrived_key_.clearKey(); //clear the key
                 hashCredential(hash_); //update the credential hash
-                genId(account); //generate the the id
             }
         }
     }
@@ -91,6 +92,15 @@ credential::credential(secStr& account,
     debugCredential();
     #endif
 }
+
+credential::credential(credentialData& raw_cred,
+                       const masterKey* master_key)
+: credential(raw_cred.account_,
+             raw_cred.description_,
+             raw_cred.password_,
+             raw_cred.username_,
+             master_key)
+{}
 
 //persistent credential constructor
 credential::credential(secStr& account_hex,
@@ -116,9 +126,9 @@ credential::credential(secStr& account_hex,
     if (account_hex.size() > 0 && (account_hex.size() % 2) == 0 &&
         uname_hex.size() > 0 && (uname_hex.size() % 2) == 0 &&
         pw_hex.size() > 0 && (pw_hex.size() % 2) == 0 &&
-        id_hex.size() > 0 && (id_hex.size() % 2) == 0 &&
-        salt_hex.size() > 0 && (salt_hex.size() % 2) == 0 &&
-        hash_hex.size() > 0 && (hash_hex.size() % 2) == 0
+        id_hex.size() == (2*ID_BYTE_SIZE) &&
+        salt_hex.size() > 0 && (2*SALT_BYTE_SIZE) &&
+        hash_hex.size() > 0 && (2*HASH_BYTE_SIZE)
        )
     {
         //set the lengths of the stored text fields
@@ -461,26 +471,6 @@ bool credential::encryptValue(uint8_t* value, const size_t byte_size, credential
     return success;
 }
 
-bool credential::genId(secStr& account)
-{
-    bool success = false;
-
-    if (account.size() > 0)
-    {
-
-        if (skeinHash(
-              account.byteStr(),
-              account.size(),
-              reinterpret_cast<uint8_t*>(id_.data()),
-              (ID_BYTE_SIZE)))
-        {
-            success = true;
-        }
-    }
-
-    return success;
-}
-
 inline bool credential::updateField(secStr &new_val, unique_ptr<uint8_t[]> &field, size_t &field_len)
 {
     bool success = false;
@@ -519,6 +509,7 @@ void credential::hashCredential(skein_512_hash &buf)
     skeinCtxPrepare(&skein_context, (const SkeinSize_t)SKEIN_SIZE);
     skeinInit(&skein_context, HASH_BIT_SIZE);
 
+    // Changing this will break ABI compatibility
     //Hash all credential data
     skeinUpdate(&skein_context, (uint8_t*)&acnt_len_, sizeof(size_t));
     skeinUpdate(&skein_context, account_.get(), acnt_len_);

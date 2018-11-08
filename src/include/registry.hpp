@@ -68,7 +68,7 @@ class registry
 
     inline void insert(unique_ptr<DATA_TYPE> data)
     {
-        data_[data->get_id()] = move(data);
+        data_[data->getIdentifier()] = move(data);
     }
 
     private:

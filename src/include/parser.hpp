@@ -12,6 +12,7 @@
 
 using std::ios_base;
 using std::istream;
+using std::move;
 using std::unique_ptr;
 using std::vector;
 
@@ -43,7 +44,7 @@ class parser
 
     vector<secStr> getErrors();
 
-    vector<credential*>& getParsedCredentials();
+    vector<unique_ptr<credential>>& getParsedCredentials();
 
     void clear();
 
@@ -62,7 +63,7 @@ class parser
     const masterKey* mk_{nullptr};
     unique_ptr<char[]> input_{};
     cJSON* output_{nullptr};
-    vector<credential*> creds_{};
+    vector<unique_ptr<credential>> creds_{};
     vector<secStr> errors_{};
 
     /******************

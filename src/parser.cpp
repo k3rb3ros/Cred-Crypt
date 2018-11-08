@@ -16,7 +16,7 @@ parser::~parser()
 
 bool parser::errorsOccured() { return errors_.size() > 0; }
 
-vector<credential*>& parser::getParsedCredentials() { return creds_; }
+vector<unique_ptr<credential>>& parser::getParsedCredentials() { return creds_; }
 
 vector<secStr> parser::getErrors() { return errors_; }
 
@@ -144,19 +144,24 @@ inline void parser::parseInternal()
                 secStr salt_hex(salt->valuestring);
 
                 //instantiate the credential
-                credential* cred = new credential(acnt_hex, desc_hex, uname_hex, pw_hex,
-                                                  id_hex, hash_hex, salt_hex, mk_);
+                auto cred =
+                    make_unique<credential>
+                    (acnt_hex,
+                     desc_hex,
+                     uname_hex,
+                     pw_hex,
+                     id_hex,
+                     hash_hex,
+                     salt_hex,
+                     mk_
+                    );
+
                 if (cred->isValid())
                 {
-                    creds_.push_back(cred);
+                    creds_.push_back(move(cred));
                 }
                 else
                 { //delete the credential and report the error
-                    if (cred != nullptr)
-                    {
-                        delete cred;
-                        cred = nullptr;
-                    }
                     auto cred_err = secStr("A credential failed its hash check and was not loaded");
                     errors_.push_back(cred_err);
                 }
