@@ -25,7 +25,7 @@ class testNode
     inline bool operator <(testNode &rhs) const { return id_ < rhs.id_; }
     inline bool operator >(testNode &rhs) const { return id_ > rhs.id_; }
 
-    inline identifier get_id() { return id_; }
+    inline identifier getIdentifier() { return id_; }
 
     inline uint64_t get_value() const { return val_; }
 };

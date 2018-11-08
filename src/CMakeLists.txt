@@ -13,15 +13,17 @@ set (CRED_CRYPT_C_SRC
 #CPP files for LibCredCrypt
 set (CRED_CRYPT_CPP_SRC
      api.cpp
-     credCryptImpl.cpp
      credential.cpp
+     credCryptImpl.cpp
+     credentialData.cpp
      credentialKey.cpp
      headerReader.cpp
      headerWriter.cpp
+     identifier.cpp
      keyChecker.cpp
      parser.cpp
      masterKey.cpp
-     random.cpp 
+     random.cpp
      secureString.cpp
      timer.cpp
     )

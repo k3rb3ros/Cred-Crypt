@@ -28,7 +28,7 @@ class credCrypt
 
     //As a user I want to be able to decrypt and view the password of a given credential
     //or see the entire credential including the password
-    Credential viewFullCredential(secStr& acnt, bool pw=false);
+    credentialData viewFullCredential(secStr& acnt, bool pw=false);
 
     secStr viewPassword(secStr& acnt);
 
@@ -41,16 +41,16 @@ class credCrypt
     void deleteCredential(secStr& acnt);
 
     //As a user I want to be able to insert/update a credential into the manager
-    void insertCredential(Credential &cred);
+    void insertCredential(credentialData &cred);
 
     //As a user I want to be able to see a list of all credentials stored by the manager
-    void listAllCredentials(std::vector<Credential>& creds, bool pw=false);
+    void listAllCredentials(std::vector<credentialData>& creds, bool pw=false);
 
     //As a user I want to be able to to load my stored passwords into the credential manager
     //from the file of my choosing
     void loadCredentialsFromFile(secStr& f_name, secStr& pw);
 
-    void updateCredential(Credential &cred);
+    void updateCredential(credentialData &cred);
 
     //As a user I want to be able to save a secure representation of my passwords to the file
     // of my choosing

@@ -1,6 +1,6 @@
 /*
-* A credential is an abstraction for everything that is necessary to log on or 
-* authenticate to a service. It stores 
+* A credential is an abstraction for everything that is necessary to log on or
+* authenticate to a service. It stores
 * Account the name of the account being authenticated to.
 * Description any optional information that might be relevant to authenticate to* the account.
 * Username the username needed to authenticate the account.
@@ -60,17 +60,16 @@ class credential
     explicit credential(secStr& account,
                         secStr& username,
                         secStr& password,
-                        const masterKey* master_key);
+                        const masterKey& master_key);
 
     explicit credential(secStr& account,
                         secStr& description,
                         secStr& username,
                         secStr& password,
-                        const masterKey* master_key);
+                        const masterKey& master_key);
 
-    /* syntactic sugar to call above constructor */
-    explicit credential(credentialData& raw_cred,
-                        const masterKey* master_key);
+    // calls above constructor
+    explicit credential(credentialData& raw_cred, const masterKey& master_key);
 
     /*imported from existing (values already encrypted)*/
     explicit credential(secStr& account_hex,
@@ -80,7 +79,7 @@ class credential
                         secStr& id_hex,
                         secStr& hash_hex,
                         secStr& salt_hex,
-                        const masterKey* master_key);
+                        const masterKey& master_key);
 
     /*****************
     * public methods *
@@ -120,8 +119,6 @@ class credential
     /***************
     * private data *
     ****************/
-    const masterKey* master_key_{nullptr};
-    credentialKey derrived_key_;
     array<uint64_t, HASH_WORD_SIZE> hash_{};
     identifier id_{};
     size_t acnt_len_{0};
@@ -132,6 +129,8 @@ class credential
     unique_ptr<uint8_t[]> description_{nullptr};
     unique_ptr<uint8_t[]> username_{nullptr};
     unique_ptr<uint8_t[]> password_{nullptr};
+    const masterKey& master_key_;
+    credentialKey derrived_key_;
 
     /******************
     * private methods *

@@ -27,6 +27,7 @@ using std::istream;
 using std::make_unique;
 using std::ostream;
 using std::out_of_range;
+using std::shared_ptr;
 using std::string;
 using std::swap;
 using std::unique_ptr;
@@ -97,7 +98,7 @@ class secStr
     size_t size() const;
     uint8_t* byteStr();
     vector<secStr> split(const uint8_t delim) const;
-    vector<secStr> splitWQuotes(const uint8_t delim) const;
+    vector<shared_ptr<secStr>> splitWQuotes(const uint8_t delim) const;
 
     /************************************
     * out of class comparison overloads *

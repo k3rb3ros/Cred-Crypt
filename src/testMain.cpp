@@ -2,6 +2,7 @@
 #include <sstream> //stringstream class
 #include <string> //std::string class
 #include "include/api.hpp" //CredCrypt api
+#include "include/credentialData.hpp" //credentialData class
 #include "include/secureString.hpp" //secStr class
 
 using std::cout;
@@ -13,22 +14,22 @@ inline void printCE(credCrypt& inst, secStr& acnt)
 {
     if (inst.credentialExists(acnt))
     {
-        cout << "Credential(" << acnt << ")" << " exists" << endl;
+        cout << "credential(" << acnt << ")" << " exists" << endl;
     }
     else
     {
-        cout << "Credential(" << acnt << ")" << " does NOT exist" << endl;
+        cout << "credential(" << acnt << ")" << " does NOT exist" << endl;
     }
 }
 
-inline void printCredential(Credential& cred, secStr name)
+inline void printcredential(credentialData& cred, secStr name)
 {
-    cout << "Credential(" << name << ") { account:\"" << cred.account << "\" description:\""
-         << cred.description << "\" username:\"" << cred.user_name << "\" password:\""
-         << cred.password << "\" }" << endl;
+    cout << "credential(" << name << ") { account:\"" << cred.account_ << "\" description:\""
+         << cred.description_ << "\" username:\"" << cred.username_ << "\" password:\""
+         << cred.password_ << "\" }" << endl;
 }
 
-inline void printAllCredentials(vector<Credential>& creds)
+inline void printAllcredentials(vector<credentialData>& creds)
 {
     if (creds.size() == 0)
     {
@@ -41,7 +42,7 @@ inline void printAllCredentials(vector<Credential>& creds)
         {
             stringstream ss;
             ss << (s+1);
-            printCredential(creds[s], secStr(ss.str()));
+            printcredential(creds[s], secStr(ss.str()));
         }
     }
 }
@@ -49,50 +50,50 @@ inline void printAllCredentials(vector<Credential>& creds)
 int main()
 {
     credCrypt instance;
-    Credential dummy_cred;
+    credentialData dummy_cred;
     secStr out_f(".cc.crd");
 
-    dummy_cred.account = secStr("account");
-    dummy_cred.description = secStr("description");
-    dummy_cred.user_name = secStr("username");
-    dummy_cred.password = secStr("password");
+    dummy_cred.account_ = secStr("account");
+    dummy_cred.description_ = secStr("description");
+    dummy_cred.username_ = secStr("username");
+    dummy_cred.password_ = secStr("password");
 
     secStr pw("R3411y1337P455W0RD");
     cout << "Creating master key" << endl;
     instance.inputPassword(pw);
     cout << "Inserting credential \"account\"" << endl;
     instance.insertCredential(dummy_cred);
-    printCE(instance, dummy_cred.account);
+    printCE(instance, dummy_cred.account_);
     cout << "Searching for credential \"account\"" << endl;
-    Credential cred1NoPW = instance.viewFullCredential(dummy_cred.account);
-    printCredential(cred1NoPW, secStr("cred1NoPW"));
-    Credential cred1PW = instance.viewFullCredential(dummy_cred.account, true);
-    printCredential(cred1PW, secStr("cred1PW"));
+    credentialData cred1NoPW = instance.viewFullCredential(dummy_cred.account_);
+    printcredential(cred1NoPW, secStr("cred1NoPW"));
+    credentialData cred1PW = instance.viewFullCredential(dummy_cred.account_, true);
+    printcredential(cred1PW, secStr("cred1PW"));
     cout << "Deleting credential \"account\"" << endl;
-    instance.deleteCredential(dummy_cred.account);
-    printCE(instance, dummy_cred.account);
+    instance.deleteCredential(dummy_cred.account_);
+    printCE(instance, dummy_cred.account_);
 
-    Credential farce_book;
-    farce_book.account = secStr("Farcebook");
-    farce_book.user_name = secStr(" ");
-    farce_book.password = secStr("IAmDumb!");
+    credentialData farce_book;
+    farce_book.account_ = secStr("Farcebook");
+    farce_book.username_ = secStr(" ");
+    farce_book.password_ = secStr("IAmDumb!");
     instance.insertCredential(farce_book);
-    printCE(instance, farce_book.account);
-    farce_book.description = secStr("My source of news");
-    farce_book.user_name = secStr("JimBob");
-    farce_book.password = secStr("Trump1234");
+    printCE(instance, farce_book.account_);
+    farce_book.description_ = secStr("My source of news");
+    farce_book.username_ = secStr("JimBob");
+    farce_book.password_ = secStr("Trump1234");
     instance.updateCredential(farce_book);
-    Credential fb_upd = instance.viewFullCredential(farce_book.account);
-    printCredential(fb_upd, secStr("Farcebook"));
-    cout << "viewPassword() " << instance.viewPassword(fb_upd.account)<< endl;
+    credentialData fb_upd = instance.viewFullCredential(farce_book.account_);
+    printcredential(fb_upd, secStr("Farcebook"));
+    cout << "viewPassword() " << instance.viewPassword(fb_upd.account_)<< endl;
 
     instance.insertCredential(dummy_cred);
-    vector<Credential> all_creds;
+    vector<credentialData> all_creds;
     instance.listAllCredentials(all_creds);
-    printAllCredentials(all_creds);
+    printAllcredentials(all_creds);
     all_creds.clear();
     instance.listAllCredentials(all_creds, true);
-    printAllCredentials(all_creds);
+    printAllcredentials(all_creds);
 
     cout << "Saving credentials to file " << out_f << endl;
     instance.saveCredentialsToFile(out_f);
@@ -102,7 +103,7 @@ int main()
     all_creds.clear();
     instance.inputPassword(pw);
     instance.listAllCredentials(all_creds);
-    printAllCredentials(all_creds);
+    printAllcredentials(all_creds);
 
     cout << "Loading credentials from file " << out_f << endl;
     instance.loadCredentialsFromFile(out_f, pw);

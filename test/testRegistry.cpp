@@ -111,7 +111,7 @@ TEST(unitTestRegistry, TraverseReturnsSortedVectorOfNodesWhenTheyExist)
     for (uint64_t i=0; i<100; ++i)
     {
         const auto compare = trav[i];
-        ASSERT_EQ(i+1, compare->get_id().data()[0]);
+        ASSERT_EQ(i+1, compare->getIdentifier().data()[0]);
     }
 }
 

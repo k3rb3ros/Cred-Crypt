@@ -1,6 +1,7 @@
 #include "include/credCryptImpl.hpp"
-#include "ocbMode.h" //ocbSetup(), ocbEncrypt()
-#include "util.h" //hexEncode()
+#include "include/identifier.hpp" //identifier class
+#include "include/ocbMode.h" //ocbSetup(), ocbEncrypt()
+#include "include/util.h" //hexEncode()
 
 credCryptImpl::credCryptImpl() : clean_(true), timeout_(30), timer_(timeout_)
 {
@@ -24,6 +25,11 @@ bool credCryptImpl::clearCredentials()
     return reg_.size() == 0;
 }
 
+bool credCryptImpl::credentialExists(secStr& acnt)
+{
+  return reg_.exists(identifier{acnt});
+}
+
 //The current valid rule is that a credential must have at least an account name, username and password
 bool credCryptImpl::credentialIsValid(const credentialData& cred) const
 {
@@ -44,6 +50,35 @@ bool credCryptImpl::deleteCredential(secStr& acnt)
     return success;
 }
 
+bool credCryptImpl::inputPassword(secStr& pw)
+{
+    bool success = false;
+    if (clean_) //no credentials loaded so we can generate a new key
+    {
+        if (master_key_.genKey(pw))
+        {
+            clean_ = false;
+            checker_.hashKey(reinterpret_cast<const uint64_t*>(master_key_.keyBytes()), KEY_WORD_SIZE);
+            success = true;
+        }
+    }
+    else //state is not clean so we need to preserve the existing salt
+    {
+        assert(!clean_);
+        if (master_key_.inputPassword(pw))
+        {
+            //check if the user inputted the correct pw
+            success = checker_.checkKey(reinterpret_cast<const uint64_t*>(master_key_.keyBytes()),
+                                        KEY_WORD_SIZE);
+        }
+    }
+
+    timer_.reset(); //ensure the master key timeout is running
+
+    return success;
+
+}
+
 bool credCryptImpl::insertCredential(credentialData& cred)
 {
     timer_.reset();
@@ -51,9 +86,7 @@ bool credCryptImpl::insertCredential(credentialData& cred)
 
     if (credentialData::isValid(cred) && master_key_.isValid())
     {
-        //TODO fix me
-        auto fuck = credential{cred, master_key_};
-        //reg_.insert(make_unique<credential>(nullptr);
+        reg_.insert(make_unique<credential>(cred, master_key_));
         clean_ = false;
         success = true;
     }
@@ -139,7 +172,8 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
     if (ifs && ifs.is_open())
     {
         headerReader HR(&master_key_);
-        parser P(&master_key_);
+        vector<unique_ptr<credential>> creds_parsed{};
+        parser P(master_key_, creds_parsed);
 
         //reset the key
         master_key_.clearSalt();
@@ -198,12 +232,9 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
             }
         }
         //insert the parsed credentials into the tree
-        if (P.numCredentialsParsed() > 0)
+        if (creds_parsed.size() > 0)
         {
-            //TODO fix me
-            /*
-            auto creds_to_insert = P.getParsedCredentials();
-            for (auto &cred: creds_to_insert)
+            for (auto &cred: creds_parsed)
             {
                 size_t start_size = reg_.size();
                 reg_.insert(move(cred));
@@ -212,7 +243,6 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
                     cerr << "ERROR: inserting credential into tree" << endl;
                 }
             }
-            */
 
             //keep the salt we just loaded from getting cleared on the next pw enter
             clean_ = false;

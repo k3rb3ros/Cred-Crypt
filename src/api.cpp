@@ -4,35 +4,12 @@
 
 bool credCrypt::credentialExists(secStr& acnt)
 {
-    return (impl_.tree_.searchByHash(acnt) != nullptr);
+    return impl_.credentialExists(acnt);
 }
 
 bool credCrypt::inputPassword(secStr& pw)
 {
-    bool success = false;
-    if (impl_.clean_) //no credentials loaded so we can generate a new key
-    {
-        if (impl_.master_key_.genKey(pw))
-        {
-            impl_.clean_ = false;
-            impl_.checker_.hashKey((uint64_t*)impl_.master_key_.keyBytes(), KEY_WORD_SIZE);
-            success = true;
-        }
-    }
-    else //state is not clean so we need to preserve the existing salt
-    {
-        assert(!impl_.clean_);
-        if (impl_.master_key_.inputPassword(pw))
-        {
-            //check if the user inputted the correct pw
-            success = impl_.checker_.checkKey((uint64_t*)impl_.master_key_.keyBytes(),
-                                              KEY_WORD_SIZE);
-        }
-    }
-
-    impl_.timer_.reset(); //ensure the master key timeout is running
-
-    return success;
+    return impl_.inputPassword(pw);
 }
 
 bool credCrypt::keyIsValid()
@@ -41,21 +18,22 @@ bool credCrypt::keyIsValid()
             impl_.checker_.checkKey((uint64_t*)impl_.master_key_.keyBytes(), KEY_WORD_SIZE));
 }
 
-Credential credCrypt::viewFullCredential(secStr& acnt, bool pw)
+credentialData credCrypt::viewFullCredential(secStr& acnt, bool pw)
 {
-    Credential cred;
+    credentialData cred{};
     if (!impl_.master_key_.isValid()) { throw InvalidKeyException(); }
 
     if (!impl_.getCredential(acnt, cred, pw)) { throw InvalidCredentialException(); }
 
     return cred;
 }
+
 secStr credCrypt::viewPassword(secStr& acnt)
 {
     if (!impl_.master_key_.isValid()) { throw InvalidKeyException(); }
     secStr password;
 
-    if (acnt.size() > 0 && impl_.tree_.searchByHash(acnt))
+    if (acnt.size() > 0 && impl_.reg_.search(identifier{acnt}))
     {
         if (!impl_.getPassword(acnt, password)) { throw InvalidCredentialException(); }
     }
@@ -78,7 +56,7 @@ void credCrypt::deleteCredential(secStr& acnt)
     if (!impl_.deleteCredential(acnt)) { throw CredentialNotFoundException(); }
 }
 
-void credCrypt::insertCredential(Credential& cred)
+void credCrypt::insertCredential(credentialData& cred)
 {
     if (!impl_.master_key_.isValid()) { throw InvalidKeyException(); }
 
@@ -86,7 +64,7 @@ void credCrypt::insertCredential(Credential& cred)
     else { throw InvalidCredentialException(); }
 }
 
-void credCrypt::listAllCredentials(std::vector<Credential>& creds, bool pw)
+void credCrypt::listAllCredentials(std::vector<credentialData>& creds, bool pw)
 {
     if (!impl_.master_key_.isValid()) { throw InvalidKeyException(); }
     if (!impl_.getCredentials(creds, pw)) { throw InvalidCredentialException(); }
@@ -94,14 +72,14 @@ void credCrypt::listAllCredentials(std::vector<Credential>& creds, bool pw)
 
 void credCrypt::loadCredentialsFromFile(secStr& f_name, secStr& pw)
 {
-    if (impl_.tree_.size() > 0) { throw DestructiveOperationException(); }
+    if (impl_.reg_.size() > 0) { throw DestructiveOperationException(); }
     if (!impl_.loadCredentialsFromFile(f_name, pw)) { throw CredentialLoadException(); }
 }
 
-void credCrypt::updateCredential(Credential &cred)
+void credCrypt::updateCredential(credentialData &cred)
 {
     if (!impl_.master_key_.isValid()) { throw InvalidKeyException(); }
-    if (impl_.tree_.searchByHash(cred.account) != nullptr)
+    if (impl_.reg_.search(identifier{cred.account_}) != nullptr)
     {
         if (!impl_.updateCredential(cred))
         {

@@ -28,7 +28,9 @@ class parser
     /***************
     * Constructors *
     ***************/
-    parser(const masterKey* mk);
+    parser() = delete;
+
+    explicit parser(const masterKey& mk, vector<unique_ptr<credential>>& cred_container);
 
     /*************
     * destructor *
@@ -44,8 +46,6 @@ class parser
 
     vector<secStr> getErrors();
 
-    vector<unique_ptr<credential>>& getParsedCredentials();
-
     void clear();
 
     void parse();
@@ -60,10 +60,10 @@ class parser
     /***************
     * private data *
     ***************/
-    const masterKey* mk_{nullptr};
-    unique_ptr<char[]> input_{};
+    const masterKey& mk_;
     cJSON* output_{nullptr};
-    vector<unique_ptr<credential>> creds_{};
+    unique_ptr<char[]> input_{};
+    vector<unique_ptr<credential>>& creds_;
     vector<secStr> errors_{};
 
     /******************

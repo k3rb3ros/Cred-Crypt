@@ -1,4 +1,7 @@
 #include "include/cli.hpp"
+#include "include/credentialData.hpp"
+
+using std::make_shared;
 
 //used to consistently change actions
 static void change_action(cred_crypt_state &state, action new_action,
@@ -27,23 +30,23 @@ static void get_input(cred_crypt_state &state)
     }
 }
 
-static void print_credential(Credential& cred)
+static void print_credential(credentialData& cred)
 {
     cout << "{ " << endl
-         << "\t" << "account: " << cred.account << endl;
-    if (cred.description.size() > 0)
+         << "\t" << "account: " << cred.account_ << endl;
+    if (cred.description_.size() > 0)
     {
-        cout << "\t" << "description: " << cred.description << endl;
+        cout << "\t" << "description: " << cred.description_ << endl;
     }
-    cout << "\t" << "username: " << cred.user_name << endl;
-    if (cred.password.size() > 0)
+    cout << "\t" << "username: " << cred.username_ << endl;
+    if (cred.password_.size() > 0)
     {
-        cout << "\t" << "password: " << cred.password << endl;
+        cout << "\t" << "password: " << cred.password_ << endl;
     }
     cout << "}" << endl;
 }
 
-static void print_credentials(vector<Credential> &creds)
+static void print_credentials(vector<credentialData> &creds)
 {
     if (creds.size() > 0)
     {
@@ -100,11 +103,11 @@ static void execute_action(cred_crypt_state &state)
             //cout << "Check if credential exists" << endl;
             if (state.instance_->credentialExists(*(state.input_[1].get())))
             {
-                cout << "Credential " << *state.input_[1].get() << " Exists" << endl;
+                cout << "credentialData " << *state.input_[1].get() << " Exists" << endl;
             }
             else
             {
-                cout << "Credential " << *state.input_[1].get() << " Does not exist" << endl;
+                cout << "credentialData " << *state.input_[1].get() << " Does not exist" << endl;
             }
         break;
         case CHK_KEY_VALID:
@@ -198,22 +201,22 @@ static void execute_action(cred_crypt_state &state)
         case INS_CRED:
             if (state.instance_->keyIsValid())
             {
-                Credential cred;
+                credentialData cred;
                 if (state.input_.size() == 4) //cred with no description
                 {
-                    cred.account = *state.input_[1].get();
-                    cred.user_name = *state.input_[2].get();
-                    cred.password = *state.input_[3].get();
+                    cred.account_ = *state.input_[1].get();
+                    cred.username_ = *state.input_[2].get();
+                    cred.password_ = *state.input_[3].get();
                 }
                 else if (state.input_.size() == 5) //cred with description
                 {
-                    cred.account = *state.input_[1].get();
-                    cred.description = *state.input_[2].get();
-                    cred.user_name = *state.input_[3].get();
-                    cred.password = *state.input_[4].get();
+                    cred.account_ = *state.input_[1].get();
+                    cred.description_ = *state.input_[2].get();
+                    cred.username_ = *state.input_[3].get();
+                    cred.password_ = *state.input_[4].get();
                 }
 
-                cout << "Inserting credential " << cred.account << "... ";
+                cout << "Inserting credential " << cred.account_<< "... ";
                 try
                 {
                     state.instance_->insertCredential(cred);
@@ -236,7 +239,7 @@ static void execute_action(cred_crypt_state &state)
             if (state.instance_->keyIsValid())
             {
                 bool pw = false;
-                vector<Credential> creds;
+                vector<credentialData> creds;
 
                 if (state.input_.size() == 2 && (state.input_[1]->size() >= 4))
                 {
@@ -260,7 +263,7 @@ static void execute_action(cred_crypt_state &state)
 
                 change_action(state, NO_ACTION);
 
-                cout << "Credentials currently stored in manager" << endl;
+                cout << "credentialDatas currently stored in manager" << endl;
                 print_credentials(creds);
             }
             else
@@ -349,33 +352,33 @@ static void execute_action(cred_crypt_state &state)
             {
                 if (state.instance_->credentialExists(*state.input_[1]))
                 {
-                    shared_ptr<secStr> description = make_shared<secStr>(secStr());
-                    shared_ptr<secStr> username = make_shared<secStr>(secStr());
-                    shared_ptr<secStr> password = make_shared<secStr>(secStr());
+                    secStr description{};
+                    secStr username{};
+                    secStr password{};
                     for (size_t s=2; s<state.input_.size(); ++s)
                     {
                         auto parse = state.input_[s]->split(':');
                         if (parse.size() == 2)
                         {
-                            if (parse[0]->compare("description") == 0)
+                            if (parse[0].compare("description") == 0)
                             {
                                 description = parse[1];
                             }
-                            else if (parse[0]->compare("username") == 0)
+                            else if (parse[0].compare("username") == 0)
                             {
                                 username = parse[1];
                             }
-                            else if (parse[0]->compare("password") == 0)
+                            else if (parse[0].compare("password") == 0)
                             {
                                 password = parse[1];
                             }
                         }
                     }
-                    Credential update;
-                    update.account = *state.input_[1];
-                    update.description = *description;
-                    update.user_name = *username;
-                    update.password = *password;
+                    credentialData update;
+                    update.account_ = *state.input_[1];
+                    update.description_ = description;
+                    update.username_ = username;
+                    update.password_ = password;
                     try
                     {
                         cout << "Updating credential " << *state.input_[1] << "... ";
@@ -416,7 +419,7 @@ static void execute_action(cred_crypt_state &state)
 
                 try
                 {
-                    Credential cred = state.instance_->viewFullCredential(*state.input_[1], pw);
+                    credentialData cred = state.instance_->viewFullCredential(*state.input_[1], pw);
                     print_credential(cred);
                 }
                 catch (const InvalidCredentialException e)
@@ -439,7 +442,7 @@ static void execute_action(cred_crypt_state &state)
                     try
                     {
                         secStr cred_pw = state.instance_->viewPassword(*state.input_[1]);
-                        cout << "Credential " << *state.input_[1] << " { password: " << cred_pw
+                        cout << "credentialData " << *state.input_[1] << " { password: " << cred_pw
                              << " }" << endl;
                     }
                     catch (const InvalidCredentialException e)
@@ -449,7 +452,7 @@ static void execute_action(cred_crypt_state &state)
                 }
                 else
                 {
-                    cout << "Credential " << *state.input_[1] << " does not exist" << endl;
+                    cout << "credentialData " << *state.input_[1] << " does not exist" << endl;
                 }
             }
             else
@@ -471,25 +474,25 @@ static void parse_input(cred_crypt_state &state)
     {
         secStr cmd = state.input_[0]->substr(0, 4);
         if (state.action_ != CONFIRM && state.input_.size() > 0)
-        { 
+        {
             if ((cmd.compare(secStr("exis")) == 0 || cmd.compare(secStr("Exis")) == 0) &&
                  state.input_.size() == 2)
             {
                 change_action(state, CHK_CRED_EXST);
             }
             else if ((cmd.compare(secStr("clea")) == 0 || cmd.compare(secStr("Clea")) == 0) &&
-                      state.input_.size() == 1) //clearCredentials()
+                      state.input_.size() == 1) //clearcredentialDatas()
             {
                 change_action(state, CLR_ALL_CREDS);
             }
             else if ((cmd.compare(secStr("dele")) == 0 || cmd.compare(secStr("Dele")) == 0) &&
-                      state.input_.size() <= 2) //deleteCredential(acnt)
+                      state.input_.size() <= 2) //deletecredentialData(acnt)
             {
                 change_action(state, DEL_CRED);
             }
             else if ((cmd.compare(secStr("inse")) == 0 || cmd.compare(secStr("Inse")) == 0) &&
                      (state.input_.size() == 4 || state.input_.size() == 5))
-                //insertCredential(cred) { acnt, (opt)desc, uname, pw }
+                //insertcredentialData(cred) { acnt, (opt)desc, uname, pw }
             {
                 change_action(state, INS_CRED);
             }
@@ -498,13 +501,13 @@ static void parse_input(cred_crypt_state &state)
                 change_action(state, HELP);
             }
             else if ((cmd.compare(secStr("list")) == 0 || cmd.compare(secStr("Load")) == 0) &&
-                      state.input_.size() <= 2) //listAllCredentials(creds, (opt)pw)
+                      state.input_.size() <= 2) //listAllcredentialDatas(creds, (opt)pw)
             {
                 change_action(state, LIST_ALL_CREDS);
             }
             else if ((cmd.compare(secStr("load")) == 0 || cmd.compare(secStr("Load")) == 0) &&
                      (state.input_.size() == 1 || state.input_.size() == 2))
-                //loadCredential(fname, pw) pw will be asked for later
+                //loadcredentialData(fname, pw) pw will be asked for later
             {
                 change_action(state, LOAD_CREDS);
             }
@@ -525,13 +528,13 @@ static void parse_input(cred_crypt_state &state)
             }
             else if ((cmd.compare(secStr("save")) == 0 || cmd.compare(secStr("Save")) == 0) &&
                      (state.input_.size() == 1 || state.input_.size() == 2))
-                //saveCredentialsToFile(f_name) (if f_name is missing use default
+                //savecredentialDatasToFile(f_name) (if f_name is missing use default
             {
                 state.action_ = SAVE_CREDS;
             }
             else if ((cmd.compare(secStr("upda")) == 0 || cmd.compare(secStr("Upda")) == 0) &&
                     (state.input_.size() >= 3 && state.input_.size() <= 5))
-                //updateCredential(cred) { accout, (opt)desc, (opt)uname, (opt)pw }
+                //updatecredentialData(cred) { accout, (opt)desc, (opt)uname, (opt)pw }
             {
                 change_action(state, UPD_CRED);
             }
@@ -542,7 +545,7 @@ static void parse_input(cred_crypt_state &state)
             }
             else if ((cmd.compare(secStr("view")) == 0 || cmd.compare(secStr("View")) == 0) &&
                       (state.input_.size() == 2 || state.input_.size() == 3))
-                //viewFullCredential(acnt, pw) pw is optional assumed to be false if not provided
+                //viewFullcredentialData(acnt, pw) pw is optional assumed to be false if not provided
             {
                 change_action(state, VIEW_CRED);
             }
@@ -593,7 +596,7 @@ int main()
     cred_crypt_state state;
     credCrypt instance;
     state.instance_ = &instance;
-   
+
     cout << border << intro_msg << "#   " << VERSION_MAJOR << "." << VERSION_MINOR << "   #\r\n"
          << border << endl;
 

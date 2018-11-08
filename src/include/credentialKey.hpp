@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <array> // std::array 
 #include <memory> //std::unique_ptr
 #include <stdint.h> //uintxx_t types
 #include "constants.h" //SALT_BYTE_SIZE
@@ -15,6 +16,7 @@
 #include "secureString.hpp" //secStr class
 #include "util.h" //clearBuff(), hexDecode()
 
+using std::array;
 using std::unique_ptr;
 #ifdef KEY_DEBUG
 #include <iostream> //std::cout, std::endl
@@ -28,19 +30,19 @@ class credentialKey : public keyBase
     /***************
     * private data *
     ***************/
-    bool salted_;
-    bool valid_;
-    const masterKey* mk_;
-    uint64_t salt_[SALT_WORD_SIZE];
+    bool salted_{false};
+    bool valid_{false};
+    const masterKey& mk_;
+    array<uint64_t, SALT_WORD_SIZE> salt_{};
 
     public:
     /***************
     * constructors *
     ***************/
-    credentialKey() = delete; //default Ctor not allowed
-    explicit credentialKey(const masterKey* mk);
-    explicit credentialKey(const masterKey* mk, secStr& salt_hex);
+    explicit credentialKey(const masterKey& mk);
+    explicit credentialKey(const masterKey& mk, secStr& salt_hex);
 
+    credentialKey() = delete; //default Ctor not allowed
     credentialKey(credentialKey &Key) = delete; //Copy Ctor not allowed
     credentialKey& operator =(credentialKey &Key) = delete; //Copy assignment not allowed
     credentialKey& operator =(credentialKey &&Key) = delete; //Move asgnmnt not allowed

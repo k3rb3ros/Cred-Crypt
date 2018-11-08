@@ -6,22 +6,22 @@
 credential::credential(secStr& account,
                        secStr& username,
                        secStr& password,
-                       const masterKey* master_key
+                       const masterKey& master_key
                       ):
-    master_key_{master_key},
-    derrived_key_(master_key_),
     id_{account},
     acnt_len_{account.size()},
     uname_len_{username.size()},
     pw_len_{password.size()},
     account_{ make_unique<uint8_t[]>(acnt_len_) },
     username_{ make_unique<uint8_t[]>(uname_len_) },
-    password_{ make_unique<uint8_t[]>(pw_len_) }
+    password_{ make_unique<uint8_t[]>(pw_len_) },
+    master_key_{master_key},
+    derrived_key_(master_key_)
 {
     if (acnt_len_ > 0 && uname_len_ > 0 && pw_len_ > 0)
     {
         //generate the salt and in turn the derrived key
-        if (master_key_->isValid())
+        if (master_key_.isValid())
         {
             if (derrived_key_.isValid())
             {
@@ -50,10 +50,8 @@ credential::credential(secStr& account,
                        secStr& description,
                        secStr& username,
                        secStr& password,
-                       const masterKey* master_key
+                       const masterKey& master_key
                       ):
-    master_key_(master_key),
-    derrived_key_(master_key_),
     id_{account},
     acnt_len_{account.size()},
     desc_len_{description.size()},
@@ -62,11 +60,13 @@ credential::credential(secStr& account,
     account_{ make_unique<uint8_t[]>(acnt_len_) },
     description_{make_unique<uint8_t[]>(desc_len_) },
     username_{ make_unique<uint8_t[]>(uname_len_) },
-    password_{ make_unique<uint8_t[]>(pw_len_) }
+    password_{ make_unique<uint8_t[]>(pw_len_) },
+    master_key_(master_key),
+    derrived_key_(master_key_)
 {
     if (acnt_len_ > 0 && desc_len_ > 0 && uname_len_ > 0 && uname_len_ > 0)
     {
-        if (master_key_->isValid())
+        if (master_key_.isValid())
         {
             if (derrived_key_.isValid())
             {
@@ -94,7 +94,7 @@ credential::credential(secStr& account,
 }
 
 credential::credential(credentialData& raw_cred,
-                       const masterKey* master_key)
+                       const masterKey& master_key)
 : credential(raw_cred.account_,
              raw_cred.description_,
              raw_cred.password_,
@@ -110,10 +110,8 @@ credential::credential(secStr& account_hex,
                        secStr& id_hex,
                        secStr& hash_hex,
                        secStr& salt_hex,
-                       const masterKey* master_key
+                       const masterKey& master_key
                       ):
-    master_key_(master_key),
-    derrived_key_(master_key_, salt_hex),
     acnt_len_{account_hex.size()/2},
     desc_len_{desc_hex.size()/2},
     uname_len_{uname_hex.size()/2},
@@ -121,7 +119,9 @@ credential::credential(secStr& account_hex,
     account_{ make_unique<uint8_t[]>(acnt_len_) },
     description_{make_unique<uint8_t[]>(desc_len_) },
     username_{ make_unique<uint8_t[]>(uname_len_) },
-    password_{ make_unique<uint8_t[]>(pw_len_) }
+    password_{ make_unique<uint8_t[]>(pw_len_) },
+    master_key_(master_key),
+    derrived_key_(master_key_, salt_hex)
 {
     if (account_hex.size() > 0 && (account_hex.size() % 2) == 0 &&
         uname_hex.size() > 0 && (uname_hex.size() % 2) == 0 &&
@@ -194,7 +194,7 @@ inline uint8_t* credential::getField(unique_ptr<uint8_t[]> &field, size_t &field
     uint8_t* decrypted_field = nullptr;
 
     //check that we can generate the derrived key generate it if we can
-    if (master_key_->isValid() && derrived_key_.genKey())
+    if (master_key_.isValid() && derrived_key_.genKey())
     {
         decrypted_field = new uint8_t[field_len]();
 
@@ -392,9 +392,6 @@ credential::~credential()
     #endif
     //delete the derrived key and set the reference to the master key to null
 
-    //derrived_key DTOR zero fills all sensative content on destruction so we don't need to
-    master_key_ = nullptr; //credential does not own masterKey so we don't free it
-
     //zero fill all buffers that might leak information
     clearBuff(account_.get(), acnt_len_);
     clearBuff(description_.get(), desc_len_);
@@ -476,7 +473,7 @@ inline bool credential::updateField(secStr &new_val, unique_ptr<uint8_t[]> &fiel
     bool success = false;
 
     if (new_val.size() > 0 &&
-        master_key_->isValid() &&
+        master_key_.isValid() &&
         derrived_key_.genKey())
     {
         //clear the existing password

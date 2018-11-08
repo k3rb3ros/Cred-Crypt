@@ -1,8 +1,8 @@
 #include "include/parser.hpp"
 
-parser::parser(const masterKey* mk): mk_(mk)
-{
-}
+parser::parser(const masterKey& mk, vector<unique_ptr<credential>>& cred_container):
+   mk_{mk}, creds_{cred_container}
+{}
 
 parser::~parser()
 {
@@ -15,8 +15,6 @@ parser::~parser()
 }
 
 bool parser::errorsOccured() { return errors_.size() > 0; }
-
-vector<unique_ptr<credential>>& parser::getParsedCredentials() { return creds_; }
 
 vector<secStr> parser::getErrors() { return errors_; }
 
@@ -99,7 +97,7 @@ inline bool parser::isCredential(cJSON* obj)
         if (obj_type != nullptr && strncmp(obj_type->valuestring, "credential", 10) == 0)
         {
             cJSON* acnt = cJSON_GetObjectItem(obj, "account");
-            cJSON* uname = cJSON_GetObjectItem(obj, "username"); 
+            cJSON* uname = cJSON_GetObjectItem(obj, "username");
             cJSON* pw = cJSON_GetObjectItem(obj, "password");
             cJSON* id = cJSON_GetObjectItem(obj, "id");
             cJSON* hash = cJSON_GetObjectItem(obj, "hash");
@@ -110,7 +108,7 @@ inline bool parser::isCredential(cJSON* obj)
                 hash != nullptr && salt != nullptr)
             {
                 is_cred = true;
-            } 
+            }
         }
     }
 
@@ -129,7 +127,7 @@ inline void parser::parseInternal()
             {
                 cJSON* acnt = cJSON_GetObjectItem(j_obj, "account");
                 cJSON* desc = cJSON_GetObjectItem(j_obj, "description");
-                cJSON* uname = cJSON_GetObjectItem(j_obj, "username"); 
+                cJSON* uname = cJSON_GetObjectItem(j_obj, "username");
                 cJSON* pw = cJSON_GetObjectItem(j_obj, "password");
                 cJSON* id = cJSON_GetObjectItem(j_obj, "id");
                 cJSON* hash = cJSON_GetObjectItem(j_obj, "hash");

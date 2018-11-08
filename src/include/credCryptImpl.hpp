@@ -42,9 +42,13 @@ class credCryptImpl final
 
     bool clearCredentials();
 
+    bool credentialExists(secStr& acnt);
+
     bool credentialIsValid(const credentialData& cred) const;
 
     bool deleteCredential(secStr& acnt);
+
+    bool inputPassword(secStr& pw);
 
     bool insertCredential(credentialData& cred);
 

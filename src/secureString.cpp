@@ -3,6 +3,7 @@
 using std::bad_alloc;
 using std::copy;
 using std::fill;
+using std::make_shared;
 using std::make_unique;
 using std::out_of_range;
 using std::swap;
@@ -349,14 +350,14 @@ vector<secStr> secStr::split(const uint8_t delim = '\n') const
     return split;
 }
 
-vector<secStr> secStr::splitWQuotes(const uint8_t delim) const
+vector<shared_ptr<secStr>> secStr::splitWQuotes(const uint8_t delim) const
 {
     // escaped double quotes \" do not get split on like regular double quotes
     assert(delim != '"'); //doesn't work for splititng on " since they are handled differently
     size_t start = 0;
     size_t offset = 1;
     splitState state = splitState::DEFAULT;
-    vector<secStr> split;
+    vector<shared_ptr<secStr>> split;
 
     if (size_ < 2) { return split; } //we can't split an array with > 2 characters in it
 
@@ -389,7 +390,7 @@ vector<secStr> secStr::splitWQuotes(const uint8_t delim) const
                 { offset++; }
 
                 // split the substring
-                split.push_back(substr(start, (offset-start)));
+                split.push_back(make_shared<secStr>(substr(start, (offset-start))));
                 if (str_[offset] == '"') { ++offset; }; //eat the trailing "
                 state = splitState::DEFAULT;
             break;
@@ -415,7 +416,7 @@ vector<secStr> secStr::splitWQuotes(const uint8_t delim) const
 
                 if (str_[start] != delim && str_[start] != '"')
                 {
-                    split.push_back(substr(start, (offset-start)));
+                    split.push_back(make_shared<secStr>(substr(start, (offset-start))));
                 }
             default:
             break;
