@@ -181,7 +181,7 @@ bool credential::updateDescription(secStr& description)
 
 bool credential::updatePassword(secStr& password)
 {
-    return updateField(password, password_, uname_len_);
+    return updateField(password, password_, pw_len_);
 }
 
 bool credential::updateUsername(secStr& username)
@@ -245,12 +245,12 @@ secStr credential::getDescriptionStr()
 
 secStr credential::getPasswordStr()
 {
-    uint8_t* pw = getField(password_, uname_len_); //get the password
-    secStr Pw = (pw != nullptr) ? secStr(pw, uname_len_) : secStr();
+    uint8_t* pw = getField(password_, pw_len_); //get the password
+    secStr Pw = (pw != nullptr) ? secStr(pw, pw_len_) : secStr();
 
     if (pw != nullptr)
     {
-        clearBuff(pw, uname_len_);
+        clearBuff(pw, pw_len_);
         delete[] pw;
         pw = nullptr;
     }
@@ -338,10 +338,10 @@ ostream& operator <<(std::ostream &os, const credential &c)
     else { os << "\"username\":\"\","; }
 
     //password
-    if (c.uname_len_ > 0)
+    if (c.pw_len_ > 0)
     {
-        uint8_t* pw_hex = new uint8_t[(2*c.uname_len_)+1]();
-        os << "\"password\":\"" << hexEncode(c.password_.get(), pw_hex, c.uname_len_)
+        uint8_t* pw_hex = new uint8_t[(2*c.pw_len_)+1]();
+        os << "\"password\":\"" << hexEncode(c.password_.get(), pw_hex, c.pw_len_)
            << "\",";
 
         delete[] pw_hex;
@@ -395,7 +395,7 @@ credential::~credential()
     //zero fill all buffers that might leak information
     clearBuff(account_.get(), acnt_len_);
     clearBuff(description_.get(), desc_len_);
-    clearBuff(password_.get(), uname_len_);
+    clearBuff(password_.get(), pw_len_);
     clearBuff(username_.get(), uname_len_);
     clearBuff(reinterpret_cast<uint8_t*>(hash_.data()), HASH_BYTE_SIZE);
 }
@@ -514,8 +514,8 @@ void credential::hashCredential(skein_512_hash &buf)
     skeinUpdate(&skein_context, description_.get(), desc_len_);
     skeinUpdate(&skein_context, (uint8_t*)&uname_len_, sizeof(size_t));
     skeinUpdate(&skein_context, username_.get(), uname_len_);
-    skeinUpdate(&skein_context, (uint8_t*)&uname_len_, sizeof(size_t));
-    skeinUpdate(&skein_context, password_.get(), uname_len_);
+    skeinUpdate(&skein_context, (uint8_t*)&pw_len_, sizeof(size_t));
+    skeinUpdate(&skein_context, password_.get(), pw_len_);
     skeinUpdate(&skein_context, derrived_key_.saltBytes(), SALT_BYTE_SIZE);
     skeinFinal(&skein_context, (uint8_t*)buf.data());
 }
@@ -527,7 +527,7 @@ void credential::debugCredential() const
     unique_ptr<uint8_t[]> acnt_hex(new uint8_t[(2*acnt_len_)+1]());
     unique_ptr<uint8_t[]> desc_hex(new uint8_t[(2*desc_len_)+1]());
     unique_ptr<uint8_t[]> uname_hex(new uint8_t[(2*uname_len_)+1]());
-    unique_ptr<uint8_t[]> pw_hex(new uint8_t[(2*uname_len_)+1]());
+    unique_ptr<uint8_t[]> pw_hex(new uint8_t[(2*pw_len_)+1]());
     unique_ptr<uint8_t[]> salt_hex(new uint8_t[(2*SALT_BYTE_SIZE)+1]());
     unique_ptr<uint8_t[]> id_hex(new uint8_t[(2*ID_BYTE_SIZE)+1]());
     unique_ptr<uint8_t[]> hash_hex(new uint8_t[(2*HASH_BYTE_SIZE)+1]());
@@ -535,7 +535,7 @@ void credential::debugCredential() const
     //get the original content and hex encode it
     hexEncode(account_, acnt_hex, acnt_len_);
     hexEncode(description_, desc_hex, desc_len_);
-    hexEncode(password_, pw_hex, uname_len_);
+    hexEncode(password_, pw_hex, pw_len_);
     hexEncode(username_, uname_hex, uname_len_);
     hexEncode(derrived_key_.saltBytes(), salt_hex, SALT_BYTE_SIZE);
     hexEncode((uint8_t*)id_, id_hex, ID_BYTE_SIZE);
@@ -547,7 +547,7 @@ void credential::debugCredential() const
               << "\taccount:" << acnt_hex << ":" << acnt_len_ << endl
               << "\tdescription:" << desc_hex << ":" << desc_len_ << endl
               << "\tusername:" << uname_hex << ":" << uname_len_ << endl
-              << "\tpassword:" << pw_hex << ":" << uname_len_ << endl
+              << "\tpassword:" << pw_hex << ":" << pw_len_ << endl
               << "\tsalt:" << salt_hex << ":" << SALT_BYTE_SIZE << endl
               << "\tid:" << id_hex << ":" << ID_BYTE_SIZE << endl
               << "\thash:" << hash_hex << ":" << HASH_BYTE_SIZE << endl
