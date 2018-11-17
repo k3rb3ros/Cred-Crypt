@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <algorithm> //std::fill
 #include <array> //std::array
 #include <cassert> //assert
 #include <cstring> //memcpy()
@@ -42,11 +43,22 @@ using std::endl;
 #endif
 using std::array;
 using std::copy;
+using std::fill;
 using std::make_unique;
+using std::move;
 using std::ofstream;
 using std::unique_ptr;
 
 using skein_512_hash = array<uint64_t, HASH_WORD_SIZE>;
+
+enum class field: uint_fast8_t
+{
+    INVALID,
+    ACCOUNT,
+    DESCRIPTION,
+    PASSWORD,
+    USERNAME
+};
 
 class credential
 {
@@ -160,13 +172,10 @@ class credential
                      size_t &field_len);
 
 
-    //TODO benchmark this against inplace Decryption/Encryption and replace if inplace is faster
-    /* Generic that returns byte[] pointer to the decrypted contents of a field
-     * Only works if the master key is valid (and correct)
-     * returns nullptr if failure to decrypt occurs
-     * Does NOT free the memory pointed to by the return value
-     */
-    uint8_t* getField(unique_ptr<uint8_t[]> &field, size_t &field_len);
+    /*
+    * populates the passed in secStr with the selected Field or nothing if the key is invalid
+    */
+    secStr getField(const field field);
 
     #ifdef DBG_CRED
     /*

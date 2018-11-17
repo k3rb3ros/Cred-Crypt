@@ -28,12 +28,12 @@ credential::credential(secStr& account,
                 //copy the data into the credential
                 copy(account.byteStr(), (account.byteStr() + acnt_len_), account_.get());
                 copy(username.byteStr(), (username.byteStr() + uname_len_), username_.get());
-                copy(password.byteStr(), (password.byteStr() + uname_len_), password_.get());
+                copy(password.byteStr(), (password.byteStr() + pw_len_), password_.get());
 
                 //encrypt the data
                 encryptValue(account_.get(), acnt_len_, &derrived_key_);
                 encryptValue(username_.get(), uname_len_, &derrived_key_);
-                encryptValue(password_.get(), uname_len_, &derrived_key_);
+                encryptValue(password_.get(), pw_len_, &derrived_key_);
 
                 derrived_key_.clearKey(); //clear the derrived key
                 hashCredential(hash_); //update the credential hash
@@ -74,12 +74,12 @@ credential::credential(secStr& account,
                 copy(account.byteStr(), (account.byteStr() + acnt_len_), account_.get());
                 copy(description.byteStr(), (description.byteStr() + desc_len_), description_.get());
                 copy(username.byteStr(), (username.byteStr() + uname_len_), username_.get());
-                copy(password.byteStr(), (password.byteStr() + uname_len_), password_.get());
+                copy(password.byteStr(), (password.byteStr() + pw_len_), password_.get());
 
                 //encrypt the data
                 encryptValue(account_.get(), acnt_len_, &derrived_key_);
                 encryptValue(description_.get(), desc_len_, &derrived_key_);
-                encryptValue(password_.get(), uname_len_, &derrived_key_);
+                encryptValue(password_.get(), pw_len_, &derrived_key_);
                 encryptValue(username_.get(), uname_len_, &derrived_key_);
 
                 derrived_key_.clearKey(); //clear the key
@@ -189,88 +189,61 @@ bool credential::updateUsername(secStr& username)
     return updateField(username, username_, uname_len_);
 }
 
-inline uint8_t* credential::getField(unique_ptr<uint8_t[]> &field, size_t &field_len)
+secStr credential::getField(const field field)
 {
-    uint8_t* decrypted_field = nullptr;
+    secStr field_data{};
 
-    //check that we can generate the derrived key generate it if we can
+    //only proceed if the master key is valid and we can generate a derrived key
     if (master_key_.isValid() && derrived_key_.genKey())
     {
-        decrypted_field = new uint8_t[field_len]();
-
-        //copy the field to a new buffer and perform the decryption
-        if (decrypted_field != nullptr &&
-            memcpy(decrypted_field, field.get(), field_len) != nullptr &&
-            decryptValue(decrypted_field, field_len, &derrived_key_) == false)
+        //copy the data from the requested field to a secStr
+        switch (field)
         {
-            //clean up our resource on failure
-            clearBuff(decrypted_field, field_len);
-            delete[] decrypted_field;
-            decrypted_field = nullptr;
+            case field::ACCOUNT:
+                field_data = secStr{account_.get(), acnt_len_};
+            break;
+            case field::DESCRIPTION:
+                field_data = secStr{description_.get(), desc_len_};
+            break;
+            case field::USERNAME:
+                field_data = secStr{username_.get(), uname_len_};
+            break;
+            case field::PASSWORD:
+                field_data = secStr{password_.get(), pw_len_};
+            break;
+            case field::INVALID:
+            default:
+            break;
         }
-       derrived_key_.clearKey(); //clear the key
+
+        // decrypt the field
+        decryptValue(field_data.byteStr(), field_data.size(), &derrived_key_);
+        // clear the key
+        derrived_key_.clearKey();
     }
 
-    return decrypted_field;
+    // return the data
+    return field_data;
 }
 
 secStr credential::getAccountStr()
 {
-    uint8_t* acnt = getField(account_, acnt_len_); //get the account
-    secStr Acnt = (acnt != nullptr) ? secStr(acnt, acnt_len_) : secStr();
-
-    if (acnt != nullptr)
-    {
-        delete[] acnt;
-        acnt = nullptr;
-    }
-
-    return Acnt;
+    return getField(field::ACCOUNT);
 }
 
 secStr credential::getDescriptionStr()
 {
-    uint8_t* desc = getField(description_, desc_len_); //get the description
-    secStr Desc = (desc != nullptr) ? secStr(desc, desc_len_) : secStr();
-
-    if (desc != nullptr)
-    {
-        clearBuff(desc, desc_len_);
-        delete[] desc;
-        desc = nullptr;
-    }
-
-    return Desc;
+    return getField(field::DESCRIPTION);
 }
 
 secStr credential::getPasswordStr()
 {
-    uint8_t* pw = getField(password_, pw_len_); //get the password
-    secStr Pw = (pw != nullptr) ? secStr(pw, pw_len_) : secStr();
-
-    if (pw != nullptr)
-    {
-        clearBuff(pw, pw_len_);
-        delete[] pw;
-        pw = nullptr;
-    }
-
-    return Pw;
+    return getField(field::PASSWORD);
 }
 
 secStr credential::getUsernameStr()
 {
-    uint8_t* uname = getField(username_, uname_len_); //get the username
-    secStr Uname = (uname != nullptr) ? secStr(uname, uname_len_) : secStr();
-
-    if (uname != nullptr)
-    {
-        clearBuff(uname, uname_len_);
-        delete[] uname;
-        uname = nullptr;
-    }
-
-    return Uname;
+    return getField(field::USERNAME);
 }
 
 /*******************
@@ -390,8 +363,6 @@ credential::~credential()
     cout << "Destructor called on credential { " << hexEncode((uint8_t*)id_, id_hex, ID_BYTE_SIZE)
          << " }"<< endl;
     #endif
-    //delete the derrived key and set the reference to the master key to null
-
     //zero fill all buffers that might leak information
     clearBuff(account_.get(), acnt_len_);
     clearBuff(description_.get(), desc_len_);
@@ -476,18 +447,18 @@ inline bool credential::updateField(secStr &new_val, unique_ptr<uint8_t[]> &fiel
         master_key_.isValid() &&
         derrived_key_.genKey())
     {
-        //clear the existing password
-        if (field_len > 0) { clearBuff(field.get(), field_len); }
+        //clear the previous field
+        if (field_len > 0) { fill(field.get(), field.get()+field_len, 0); }
 
         field_len = new_val.size();
-        //allocate storage and copy the new field into it
-        field = unique_ptr<uint8_t[]>(new uint8_t [field_len]());
+        //allocate storage and copy the new value into the field
+        field = make_unique<uint8_t[]>(field_len);
         memcpy(field.get(), new_val.byteStr(), field_len);
 
         //encrypt the new description with the derrived key
         if (!encryptValue(field.get(), field_len, &derrived_key_))
         {
-            clearBuff(field.get(), field_len);
+            fill(field.get(), field.get()+field_len, 0);
             field_len = 0;
         }
         else { success = true; } //field succesfully updated

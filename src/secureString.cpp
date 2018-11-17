@@ -161,7 +161,7 @@ secStr& secStr::operator =(const secStr& rhs)
             }
 
             size_ = rhs.size_;
-            str_ = unique_ptr<uint8_t[]>(new uint8_t[rhs.size_+1]());
+            str_ = make_unique<uint8_t[]>(rhs.size_);
         }
     }
 
@@ -185,7 +185,7 @@ secStr& secStr::operator =(const string& rhs)
         }
 
         size_ = rhs.size();
-        str_ = unique_ptr<uint8_t[]>(new uint8_t[size_+1]());
+        str_ = make_unique<uint8_t[]>(size_);
     }
 
     //Copy the string
@@ -208,7 +208,7 @@ secStr& secStr::operator =(string& rhs)
         }
 
         size_ = rhs.size();
-        str_ = unique_ptr<uint8_t[]>(new uint8_t[size_+1]());
+        str_ = make_unique<uint8_t[]>(size_);
     }
 
     //Copy the string
@@ -244,10 +244,9 @@ secStr& secStr::operator =(secStr&& rhs)
 ********************/
 secStr operator +(secStr &lhs, secStr &rhs)
 {
-    size_t l_size = lhs.size();
-    size_t r_size = rhs.size();
-
-    unique_ptr<uint8_t[]> concat(new uint8_t[l_size + r_size]());
+    const size_t l_size = lhs.size();
+    const size_t r_size = rhs.size();
+    auto concat = make_unique<uint8_t[]>(l_size + r_size);
 
     if (l_size > 0 && r_size > 0)
     {
@@ -463,7 +462,7 @@ istream& operator >>(istream& is, secStr &rhs)
         size_t end = is.tellg();
         is.seekg(start);
 
-        rhs.str_ = unique_ptr<uint8_t[]>(new uint8_t[end-start]());
+        rhs.str_ = make_unique<uint8_t[]>(end-start);
         rhs.size_ = (end-start);
 
         for (size_t sz=0; sz<(end-start); ++sz)
