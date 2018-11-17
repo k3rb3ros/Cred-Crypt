@@ -9,7 +9,7 @@
 
 class keyBase
 {
-    protected: 
+    protected:
     /********************
     * protected members *
     ********************/
@@ -18,7 +18,7 @@ class keyBase
     uint64_t key_[KEY_WORD_SIZE] = { 0 };
 
     public:
-    /*************** 
+    /***************
     * constructors *
     ***************/
     //blank key
@@ -45,7 +45,7 @@ class keyBase
 
     /*************
     * destructor *
-    *************/ 
+    *************/
     virtual ~keyBase()
     {
         clearBuff((uint8_t*)key_, KEY_BYTE_SIZE);

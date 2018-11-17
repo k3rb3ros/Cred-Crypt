@@ -17,7 +17,7 @@ class masterKey : public keyBase
     private:
     /***************
     * private data *
-    ***************/ 
+    ***************/
     bool salted_;
     bool keyed_;
     uint64_t salt_[SALT_WORD_SIZE];
@@ -25,7 +25,7 @@ class masterKey : public keyBase
     public:
     /***************
     * constructors *
-    ***************/ 
+    ***************/
     explicit masterKey();
     masterKey(masterKey &Key) = delete; //Copy Ctor not allowed
     masterKey& operator =(masterKey &key) = delete; //Copy assignment not allowed

@@ -3,13 +3,14 @@
 bool exists(const char* filename)
 {
     struct stat st;
-    return (stat(filename, &st) == 0);
+
+    return (stat(filename, &st) == 0 && (st.st_mode & S_IROTH));
 }
 
 bool isEmpty(uint8_t* buffer, size_t byte_size)
 {
     for (;byte_size>0; --byte_size)
-    { 
+    {
         if (buffer[byte_size-1] != 0) { return false; }
     }
 
