@@ -79,6 +79,8 @@ int main()
     farce_book.password_ = secStr("IAmDumb!");
     instance.insertCredential(farce_book);
     printCE(instance, farce_book.account_);
+    auto fb_read = instance.viewFullCredential(farce_book.account_);
+    printcredential(fb_read, secStr{"Farcebook (read)"});
     farce_book.description_ = secStr("My source of news");
     farce_book.username_ = secStr("JimBob");
     farce_book.password_ = secStr("Trump1234");

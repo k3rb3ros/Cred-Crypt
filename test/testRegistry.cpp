@@ -2,13 +2,13 @@
 
 using std::make_unique;
 
-TEST(unitTestRegistry, DefaultRegistryIsEmpty)
+TEST(RegistryTest, DefaultRegistryIsEmpty)
 {
     registry<testNode> reg{};
     ASSERT_EQ(0UL, reg.size());
 }
 
-TEST(unitTestRegistry, CanInsertNode)
+TEST(RegistryTest, CanInsertNode)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(42);
@@ -17,7 +17,7 @@ TEST(unitTestRegistry, CanInsertNode)
     ASSERT_EQ(1UL, reg.size());
 }
 
-TEST(unitTestRegistry, CanLookUpNode)
+TEST(RegistryTest, CanLookUpNode)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(69);
@@ -26,7 +26,7 @@ TEST(unitTestRegistry, CanLookUpNode)
     ASSERT_TRUE(reg.search(identifier{69}) != nullptr);
 }
 
-TEST(unitTestRegistry, SearchReturnsNullptrWhenNodeDoesntExist)
+TEST(RegistryTest, SearchReturnsNullptrWhenNodeDoesntExist)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(1);
@@ -38,7 +38,7 @@ TEST(unitTestRegistry, SearchReturnsNullptrWhenNodeDoesntExist)
     ASSERT_TRUE(reg.search(identifier{50}) == nullptr);
 }
 
-TEST(unitTestRegistry, SearchReturnsNodeWhenExists)
+TEST(RegistryTest, SearchReturnsNodeWhenExists)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(14);
@@ -48,14 +48,14 @@ TEST(unitTestRegistry, SearchReturnsNodeWhenExists)
     ASSERT_TRUE(reg.search(identifier{14}) != nullptr);
 }
 
-TEST(unitTestRegistry, ExistsReturnsFalseOnEmptyRegistry)
+TEST(RegistryTest, ExistsReturnsFalseOnEmptyRegistry)
 {
     registry<testNode> reg{};
 
     ASSERT_FALSE(reg.exists(identifier{432}));
 }
 
-TEST(unitTestRegistry, ExistsReturnsTrueForInsertedNode)
+TEST(RegistryTest, ExistsReturnsTrueForInsertedNode)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(3);
@@ -64,14 +64,14 @@ TEST(unitTestRegistry, ExistsReturnsTrueForInsertedNode)
     ASSERT_TRUE(reg.exists(identifier{3}));
 }
 
-TEST(unitTestRegistry, DeleteReturnFalseWhenPassedInvalidId)
+TEST(RegistryTest, DeleteReturnFalseWhenPassedInvalidId)
 {
     registry<testNode> reg{};
 
     ASSERT_FALSE(reg.erase(identifier{13}));
 }
 
-TEST(unitTestRegistry, DeleteRemovesNodeFromRegistry)
+TEST(RegistryTest, DeleteRemovesNodeFromRegistry)
 {
     registry<testNode> reg{};
     unique_ptr<testNode> node = make_unique<testNode>(420);
@@ -82,7 +82,7 @@ TEST(unitTestRegistry, DeleteRemovesNodeFromRegistry)
     ASSERT_EQ(0UL, reg.size());
 }
 
-TEST(unitTestRegistry, TraverseReturnEmptyVectorWhenRegEmpty)
+TEST(RegistryTest, TraverseReturnEmptyVectorWhenRegEmpty)
 {
     registry<testNode> reg{};
 
@@ -90,7 +90,7 @@ TEST(unitTestRegistry, TraverseReturnEmptyVectorWhenRegEmpty)
     ASSERT_EQ(0UL, nodes.size());
 }
 
-TEST(unitTestRegistry, TraverseReturnsSortedVectorOfNodesWhenTheyExist)
+TEST(RegistryTest, TraverseReturnsSortedVectorOfNodesWhenTheyExist)
 {
     registry<testNode> reg{};
 
@@ -115,7 +115,7 @@ TEST(unitTestRegistry, TraverseReturnsSortedVectorOfNodesWhenTheyExist)
     }
 }
 
-TEST(unitTestRegistry, RegistryCanHandleOverOneHundredThousandNodes)
+TEST(RegistryTest, RegistryCanHandleOverOneHundredThousandNodes)
 {
     registry<testNode> reg{};
 
