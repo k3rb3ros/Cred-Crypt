@@ -5,7 +5,14 @@ using std::any_of;
 using std::copy;
 using std::fill;
 
-//TODO enforce more stringent password requirements in the future
+masterKey::masterKey(): keyBase<CIPHER_WORD_SIZE>()
+{}
+
+masterKey::masterKey(secStr& salt_hex): keyBase<CIPHER_WORD_SIZE>()
+{
+    hexDecode(salt_hex.byteStr(), (uint8_t*)salt_.data(), salt_hex.size());
+}
+
 bool masterKey::passwordMeetsRequirements(const secStr& pw)
 {
     return (pw.size() > 6 && pw.compare("") != 0);
@@ -13,12 +20,19 @@ bool masterKey::passwordMeetsRequirements(const secStr& pw)
 
 bool masterKey::isKeyed() const
 {
-  auto is_keyed = [](const uint64_t k){ return k == 0;};
-
-  return any_of(key_.begin(), key_.end(), is_keyed);
+    return keyBase::isKeyed();
 }
 
-//TODO throw an exception if password does not meet requirements
+bool masterKey::isSalted() const
+{
+    return salted_;
+}
+
+bool masterKey::isValid() const
+{
+    return (salted_ && keyBase::isKeyed());
+}
+
 bool masterKey::genKey(secStr& pw)
 {
     if (!salted_ && !isKeyed())
@@ -40,6 +54,7 @@ bool masterKey::genKey(secStr& pw)
 bool masterKey::inputPassword(secStr& pw)
 {
     bool success{false};
+
     if (salted_)
     {
         if (passwordMeetsRequirements(pw) &&
@@ -55,9 +70,18 @@ bool masterKey::inputPassword(secStr& pw)
     return success;
 }
 
-bool masterKey::isSalted() const
+bool masterKey::setKey(const uint64_t* key_words)
 {
-    return salted_;
+    bool success{false};
+
+    if (!isKeyed())
+    {
+        copy(key_words, key_words+KEY_BYTE_SIZE, key_.data());
+
+        success = true;
+    }
+
+    return success;
 }
 
 bool masterKey::setSalt(const uint64_t* salt_words)
@@ -71,28 +95,21 @@ bool masterKey::setSalt(const uint64_t* salt_words)
     return salted_;
 }
 
-bool masterKey::isValid() const
-{
-    return (salted_ && isKeyed());
-}
-
 const uint8_t* masterKey::keyBytes() const { return (uint8_t*)key_.data(); }
+
+const uint64_t* masterKey::keyData() const { return key_.data(); }
 
 const uint8_t* masterKey::saltBytes() const { return (uint8_t*)salt_.data(); }
 
+size_t masterKey::size() const { return key_.size(); }
+
 void masterKey::clearKey()
 {
-    fill(key_.begin(), key_.end(), 0);
+    keyBase::clearKey();
 }
 
 void masterKey::clearSalt()
 {
-    fill(salt_.begin(), salt_.end(), 0);
+    keyBase::clearSalt();
     salted_ = false;
-}
-
-masterKey::~masterKey()
-{   //Clear the salt from memory
-    fill(key_.begin(), key_.end(), 0);
-    fill(salt_.begin(), salt_.end(), 0);
 }

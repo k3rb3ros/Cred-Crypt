@@ -35,39 +35,39 @@ const static hex_byte_lookup hex_table[] =
 bool exists(const char* filename);
 
 //returns true if the selected buffer is NULL filled
-bool isEmpty(uint8_t* buffer, size_t byte_size);
+bool isEmpty(const uint8_t* buffer, size_t byte_size);
 
 //return true if ch is a number
-bool isNum(char ch);
+bool isNum(const char ch);
 
 // return false if an invalid serialized character is present
-bool isValidChar(char ch);
+bool isValidChar(const char ch);
 
 //compare two same sized uint64_t buffers
 int_fast8_t compareWordBuff(const uint64_t* buf_1, const uint64_t* buf_2, size_t word_len);
 
 //Return the Gray (Reflected Binary) Code of the given byte
-uint_fast8_t bin2GrayByte(uint_fast8_t bin);
+uint_fast8_t bin2GrayByte(const uint_fast8_t bin);
 
 //Return the Gray (Reflected Binary) Code of the given word
-uint64_t bin2Gray(uint64_t bin);
+uint64_t bin2Gray(const uint64_t bin);
 
 /*
  * Decodes a hex string back to its original ascii values
  * assumes a buffer of 1/2 the size of the hex string is correctly allocated
  */
-uint8_t* hexDecode(const uint8_t* hex, uint8_t* buffer, size_t hex_byte_size);
+uint8_t* hexDecode(const uint8_t* hex, uint8_t* buffer, const size_t hex_byte_size);
 
 /* Encodes any given byte into its hexidecimal value
  * assumes buffer is a correctly allocated ptr to a buffer of 2x the byte size of txt
  */
-uint8_t* hexEncode(const uint8_t* text, uint8_t* buffer, size_t txt_byte_size);
+uint8_t* hexEncode(const uint8_t* text, uint8_t* buffer, const size_t txt_byte_size);
 
 /*zero fills the given buffer of given size*/
 void clearBuff(void* buffer, size_t byte_size);
 
 //Flip the given bit in a buffer (of at least that size)
-void flipBit(void* buffer, size_t bit_to_flip);
+void flipBit(void* buffer, const size_t bit_to_flip);
 
 #ifdef __cplusplus
 }
