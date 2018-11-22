@@ -70,7 +70,7 @@ bool masterKey::inputPassword(secStr& pw)
     return success;
 }
 
-bool masterKey::setKey(const uint64_t* key_words)
+bool masterKey::setKey(const key_data_t* key_words)
 {
     bool success{false};
 
@@ -84,7 +84,7 @@ bool masterKey::setKey(const uint64_t* key_words)
     return success;
 }
 
-bool masterKey::setSalt(const uint64_t* salt_words)
+bool masterKey::setSalt(const key_data_t* salt_words)
 {
     if (!salted_ && salt_words != nullptr)
     {
@@ -97,11 +97,13 @@ bool masterKey::setSalt(const uint64_t* salt_words)
 
 const uint8_t* masterKey::keyBytes() const { return (uint8_t*)key_.data(); }
 
-const uint64_t* masterKey::keyData() const { return key_.data(); }
+const key_data_t* masterKey::keyData() const { return key_.data(); }
 
 const uint8_t* masterKey::saltBytes() const { return (uint8_t*)salt_.data(); }
 
-size_t masterKey::size() const { return key_.size(); }
+constexpr size_t masterKey::byteSize() const { return keyBase::byteSize(); }
+
+constexpr size_t masterKey::dataSize() const { return keyBase::dataSize(); }
 
 void masterKey::clearKey()
 {

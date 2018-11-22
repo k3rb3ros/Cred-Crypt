@@ -3,83 +3,64 @@
 #include <exception>
 #include <string>
 
-using std::exception;
-using std::string;
-
-class CredentialClearException : public exception
+struct CredentialClearException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "Error clearing all credentials";
     }
 };
 
-class CredentialNotFoundException : public exception
+struct CredentialNotFoundException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "The credential could not be found";
     }
 };
 
-class CredentialLoadException : public exception
+struct CredentialLoadException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "An error occured that prevented credentials from being loaded";
     }
 };
 
-class CredentialSaveException : public exception
+struct CredentialSaveException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "An error occured that prevented credentials from being saved";
     }
 };
 
-class DestructiveOperationException : public exception
+struct DestructiveOperationException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "An operation was requested that would destroy key information for one or more currently loaded credentials";
     }
 };
 
-class InvalidCredentialException : public exception
+struct InvalidCredentialException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "Invalid credential specified";
     }
 };
 
-class InvalidKeyException : public exception
+struct InvalidKeyException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "A credential access was requested without a valid key";
     }
 };
 
-class KeyGenerationException : public exception
+struct KeyGenerationException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "Error generating key";
@@ -87,24 +68,22 @@ class KeyGenerationException : public exception
 };
 
 //This should rarely happen (if ever) but we wan't to know what went wrong if it does
-class KeyTimeoutException : public exception
+struct KeyTimeoutException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "The master key timed out before the requested operation could be completed";
     }
 };
 
-class NotImplementedException : public exception
+class NotImplementedException : public std::exception
 {
     public:
 
     NotImplementedException() : errorMessage("Not yet implemented")
     { }
 
-    NotImplementedException(string thing)
+    NotImplementedException(const std::string thing)
     {
         errorMessage = thing + " not yet implemented";
     }
@@ -116,16 +95,21 @@ class NotImplementedException : public exception
 
     private:
 
-    string errorMessage;
+    std::string errorMessage;
 };
 
-class NullKeyException : public exception
+struct NullKeyException : public std::exception
 {
-    public:
-
     const char* what() const noexcept
     {
         return "A null master key was specified to the constructor of an object that needs a valid master key reference";
     }
+};
 
+class RandomDataNotAvailableException : public std::exception
+{
+    const char* what() const noexcept
+    {
+        return "The program was unable to get acces to random data that it needed to construct a cryptographic primative";
+    }
 };

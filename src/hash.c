@@ -1,7 +1,9 @@
 #include "include/hash.h"
 
-bool skeinHash(const uint8_t* input, const size_t in_bytes,
-               uint8_t* output, size_t out_bytes)
+bool skeinHash(const uint8_t* input,
+               const size_t in_bytes,
+               uint8_t* output,
+               const size_t out_bytes)
 {
     bool success = false;
 

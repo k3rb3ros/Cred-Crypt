@@ -45,19 +45,13 @@ class masterKey : protected keyBase<CIPHER_WORD_SIZE>
     bool isSalted() const;
     bool isValid() const;
     bool inputPassword(secStr& pw);
-    bool setKey(const uint64_t* key_words);
-    bool setSalt(const uint64_t* salt_words);
+    bool setKey(const key_data_t* key_words);
+    bool setSalt(const key_data_t* salt_words);
     const uint8_t* keyBytes() const;
-    const uint64_t* keyData() const;
+    const key_data_t* keyData() const;
     const uint8_t* saltBytes() const;
-
-    size_t size() const;
+    constexpr size_t byteSize() const;
+    constexpr size_t dataSize() const;
     void clearSalt();
     void clearKey();
-
-    /************
-    * operators *
-    ************/
-    bool operator == (const keyBase& rhs) const;
-    bool operator == (const keyBase* rhs) const;
 };

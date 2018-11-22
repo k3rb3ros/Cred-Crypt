@@ -34,7 +34,7 @@ void xorBlocks(uint64_t* bfr, const uint_fast8_t src, const uint_fast8_t dst)
 }
 
 /*
- * oscbSetup should copy the key to ctx->tf_ctx->key
+ * ocbSetup should copy the key to ctx->tf_ctx->key
  * and copy the nonce to ctx->nonce
  */
 TEST(unitTestOcbMode, OCbSetupWorks)
