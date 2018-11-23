@@ -1,4 +1,5 @@
 #include "include/masterKey.hpp"
+#include "exceptions.hpp"
 #include <algorithm>
 
 using std::any_of;
@@ -10,7 +11,14 @@ masterKey::masterKey(): keyBase<CIPHER_WORD_SIZE>()
 
 masterKey::masterKey(secStr& salt_hex): keyBase<CIPHER_WORD_SIZE>()
 {
-    hexDecode(salt_hex.byteStr(), (uint8_t*)salt_.data(), salt_hex.size());
+    if(hexDecode(salt_hex.byteStr(), (uint8_t*)salt_.data(), salt_hex.size()) != nullptr)
+    {
+        salted_ = true;
+    }
+    else
+    {
+        throw InvalidSaltHexException{};
+    }
 }
 
 bool masterKey::passwordMeetsRequirements(const secStr& pw)
@@ -76,7 +84,7 @@ bool masterKey::setKey(const key_data_t* key_words)
 
     if (!isKeyed())
     {
-        copy(key_words, key_words+KEY_BYTE_SIZE, key_.data());
+        copy(key_words, key_words+KEY_WORD_SIZE, key_.data());
 
         success = true;
     }
@@ -88,7 +96,7 @@ bool masterKey::setSalt(const key_data_t* salt_words)
 {
     if (!salted_ && salt_words != nullptr)
     {
-        copy(salt_words, salt_words+SALT_BYTE_SIZE, salt_.data());
+        copy(salt_words, salt_words+SALT_WORD_SIZE, salt_.data());
         salted_ = true;
     }
 

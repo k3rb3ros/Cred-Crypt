@@ -88,8 +88,7 @@ uint8_t* hexDecode(const uint8_t* hex, uint8_t* buffer, const size_t hex_byte_si
 
     if (hex!= NULL && hex_byte_size%2 == 0)
     {
-        size_t a = 0;
-        for (size_t b=0; b<hex_byte_size; b+=2)
+        for (size_t a=0, b=0; b<hex_byte_size; b+=2)
         {
             buffer[a++] = hexDeLookup(&hex[b]);
         }

@@ -59,6 +59,14 @@ struct InvalidKeyException : public std::exception
     }
 };
 
+struct InvalidSaltHexException : public std::exception
+{
+    const char* what() const noexcept
+    {
+        return "Invalid hex encoded salt specified";
+    }
+};
+
 struct KeyGenerationException : public std::exception
 {
     const char* what() const noexcept
