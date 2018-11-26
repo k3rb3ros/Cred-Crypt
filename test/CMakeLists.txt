@@ -4,6 +4,7 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_
 
 #CPP files for tests
 set (TEST_SRC
+     testCredential.cpp
      testCtrMode.cpp
      testOcbMode.cpp
      testMasterKey.cpp
@@ -16,11 +17,13 @@ set (APP_DIR "../src")
 
 #CPP files tested
 set (APP_CPP_SRC
+    "${APP_DIR}/credential.cpp"
+    "${APP_DIR}/credentialKey.cpp"
+    "${APP_DIR}/identifier.cpp"
     "${APP_DIR}/masterKey.cpp"
     "${APP_DIR}/random.cpp"
     "${APP_DIR}/secureString.cpp"
     )
-
 
 #C files tested
 set (APP_C_SRC

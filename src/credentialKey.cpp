@@ -46,7 +46,7 @@ bool credentialKey::genKey()
                       (uint8_t*)key_.data(),
                       keyBase::byteSize()))
         {
-            success = true;
+            success = isValid();
         }
     }
 

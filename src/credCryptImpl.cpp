@@ -1,7 +1,10 @@
-#include "include/credCryptImpl.hpp"
-#include "include/identifier.hpp" //identifier class
-#include "include/ocbMode.h" //ocbSetup(), ocbEncrypt()
-#include "include/util.h" //hexEncode()
+#include <fstream>
+#include "credCryptImpl.hpp"
+#include "identifier.hpp" //identifier class
+#include "ocbMode.h" //ocbSetup(), ocbEncrypt()
+#include "util.h" //hexEncode()
+
+using std::ofstream;
 
 credCryptImpl::credCryptImpl() : clean_(true), timeout_(30), timer_(timeout_)
 {
@@ -107,10 +110,10 @@ bool credCryptImpl::getCredentials(vector<credentialData>& creds, const bool pw)
             //populate an external credential and fill the fields
             credentialData data{};
 
-            data.account_ = cred->getAccountStr();
-            data.description_ = cred->getDescriptionStr();
-            data.username_ = cred->getUsernameStr();
-            if (pw) { data.password_ = cred->getPasswordStr(); }
+            data.account_ = cred->getAccount();
+            data.description_ = cred->getDescription();
+            data.username_ = cred->getUsername();
+            if (pw) { data.password_ = cred->getPassword(); }
 
             creds.push_back(data);
 
@@ -133,11 +136,11 @@ bool credCryptImpl::getCredential(secStr& acnt, credentialData& cred, const bool
     //We can only fill the credential structure if we have a valid master key
     if (search != nullptr && master_key_.isValid())
     {
-        cred.account_ = search->getAccountStr();
-        cred.description_ = search->getDescriptionStr();
-        cred.username_ = search->getUsernameStr();
+        cred.account_ = search->getAccount();
+        cred.description_ = search->getDescription();
+        cred.username_ = search->getUsername();
         //only populate pw if it was asked for
-        if (pw) { cred.password_ = search->getPasswordStr(); }
+        if (pw) { cred.password_ = search->getPassword(); }
 
         if (cred.account_.size() > 0) { success = true; }
     }
@@ -154,7 +157,7 @@ bool credCryptImpl::getPassword(secStr& acnt, secStr& pw)
 
     if (search != nullptr && master_key_.isValid())
     {
-        pw = search->getPasswordStr();
+        pw = search->getPassword();
         success = pw.size() > 0;
     }
 

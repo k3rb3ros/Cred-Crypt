@@ -16,40 +16,20 @@
 
 #pragma once
 
-#include <algorithm> //std::fill
+#include <algorithm> //std::copy //std::fill
 #include <array> //std::array
-#include <cassert> //assert
-#include <cstring> //memcpy()
+#include <cstdio> //size_t
+#include <cstdint> //uintxx_t types
 #include <iostream> //std::ofstream object
 #include <memory> //std::unique_ptr
-#include <stddef.h> //size_t
-#include <stdint.h> //uintxx_t types
 #include "constants.h" //ID_WORD_SIZE, ID_BYTE_SIZE
 #include "credentialData.hpp" //credentialData class
 #include "credentialKey.hpp" //credentialKey class
-#include "cryptoStructs.h" //key_pair type and skein_hash type
-#include "ctrMode.h" //ctrEncrypt() ctrDecrypt()
-#include "hash.h" //skeinHash()
-#include "identifier.hpp"
+#include "identifier.hpp" //identifier class
 #include "masterKey.hpp" //masterKey class
 #include "secureString.hpp" //secStr (secureString) class
-#include "skeinApi.h" //skein internal functions
-#include "util.h" //clearBuff() compareWordBuff(), hexEncode(), hexDecode(), isEmpty()
-#include "random.hpp" //Random().getBytes()
 
-#ifdef DBG_CRED
-using std::cout;
-using std::endl;
-#endif
-using std::array;
-using std::copy;
-using std::fill;
-using std::make_unique;
-using std::move;
-using std::ofstream;
-using std::unique_ptr;
-
-using skein_512_hash = array<uint64_t, HASH_WORD_SIZE>;
+using skein_512_hash_t = std::array<uint64_t, HASH_WORD_SIZE>;
 
 enum class field: uint_fast8_t
 {
@@ -68,7 +48,7 @@ class credential
     ****************/
     credential() = delete;
 
-    /*new*/
+    // descriptions are optional so we allow construction without one
     explicit credential(secStr& account,
                         secStr& username,
                         secStr& password,
@@ -96,18 +76,17 @@ class credential
     /*****************
     * public methods *
     ******************/
-    bool isKeyed() const;
-    bool isValid();
+    bool isValid() const;
     bool updateDescription(secStr& description);
     bool updatePassword(secStr& password);
     bool updateUsername(secStr& username);
 
     const identifier& getIdentifier() const { return id_; };
 
-    secStr getAccountStr();
-    secStr getDescriptionStr();
-    secStr getPasswordStr();
-    secStr getUsernameStr();
+    secStr getAccount();
+    secStr getDescription();
+    secStr getPassword();
+    secStr getUsername();
 
     /***********************
     * Comparison overloads *
@@ -131,7 +110,7 @@ class credential
     /***************
     * private data *
     ****************/
-    array<uint64_t, HASH_WORD_SIZE> hash_{};
+    skein_512_hash_t hash_{};
     identifier id_{};
     size_t acnt_len_{0};
     size_t desc_len_{0};
@@ -151,7 +130,7 @@ class credential
     /*
     * return true if the calculated hash matches the stored hash
     */
-    bool checkHash();
+    bool checkHash() const;
 
     /*********************************************************************
      * The Crypto methods have no awareness if the key is correct or not *
@@ -171,7 +150,6 @@ class credential
                      unique_ptr<uint8_t[]> &field,
                      size_t &field_len);
 
-
     /*
     * populates the passed in secStr with the selected Field or nothing if the key is invalid
     */
@@ -188,5 +166,5 @@ class credential
     /*
     * Get the Skein hash of accout, description, password and username
     */
-    void hashCredential(skein_512_hash &buf);
+    void hashCredential(skein_512_hash_t &buf) const;
 };

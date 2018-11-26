@@ -1,5 +1,25 @@
 #include "include/credential.hpp"
 
+#include "cryptoStructs.h" //key_pair type and skein_hash type
+#include "ctrMode.h" //ctrEncrypt(), ctrDecypt()
+#include "hash.h" //skeinHash()
+#include "random.hpp" //Random().getBytes()
+#include "skeinApi.h"
+#include "util.h" //compareWordBuff(), hexEncode(), hexDecode(), isEmpty()
+#include "util.hpp" //clearBuffer()
+
+#ifdef DBG_CRED
+using std::cout;
+using std::endl;
+#endif
+using std::array;
+using std::copy;
+using std::fill;
+using std::make_unique;
+using std::move;
+using std::ofstream;
+using std::unique_ptr;
+
 /***************
 * constructors *
 ****************/
@@ -21,10 +41,8 @@ credential::credential(secStr& account,
     if (acnt_len_ > 0 && uname_len_ > 0 && pw_len_ > 0)
     {
         //generate the salt and in turn the derrived key
-        if (master_key_.isValid())
+        if (master_key_.isValid() && derrived_key_.genKey())
         {
-            if (derrived_key_.isValid())
-            {
                 //copy the data into the credential
                 copy(account.byteStr(), (account.byteStr() + acnt_len_), account_.get());
                 copy(username.byteStr(), (username.byteStr() + uname_len_), username_.get());
@@ -37,8 +55,15 @@ credential::credential(secStr& account,
 
                 derrived_key_.clearKey(); //clear the derrived key
                 hashCredential(hash_); //update the credential hash
-            }
         }
+        else
+        {
+            throw InvalidKeyException{};
+        }
+    }
+    else
+    {
+        throw InvalidDataException{};
     }
 
     #ifdef DBG_CRED
@@ -66,26 +91,31 @@ credential::credential(secStr& account,
 {
     if (acnt_len_ > 0 && desc_len_ > 0 && uname_len_ > 0 && uname_len_ > 0)
     {
-        if (master_key_.isValid())
+        if (master_key_.isValid() && derrived_key_.genKey())
         {
-            if (derrived_key_.isValid())
-            {
-                //copy data into the credential
-                copy(account.byteStr(), (account.byteStr() + acnt_len_), account_.get());
-                copy(description.byteStr(), (description.byteStr() + desc_len_), description_.get());
-                copy(username.byteStr(), (username.byteStr() + uname_len_), username_.get());
-                copy(password.byteStr(), (password.byteStr() + pw_len_), password_.get());
+            //copy data into the credential
+            copy(account.byteStr(), (account.byteStr() + acnt_len_), account_.get());
+            copy(description.byteStr(), (description.byteStr() + desc_len_), description_.get());
+            copy(username.byteStr(), (username.byteStr() + uname_len_), username_.get());
+            copy(password.byteStr(), (password.byteStr() + pw_len_), password_.get());
 
-                //encrypt the data
-                encryptValue(account_.get(), acnt_len_, &derrived_key_);
-                encryptValue(description_.get(), desc_len_, &derrived_key_);
-                encryptValue(password_.get(), pw_len_, &derrived_key_);
-                encryptValue(username_.get(), uname_len_, &derrived_key_);
+            //encrypt the data
+            encryptValue(account_.get(), acnt_len_, &derrived_key_);
+            encryptValue(description_.get(), desc_len_, &derrived_key_);
+            encryptValue(password_.get(), pw_len_, &derrived_key_);
+            encryptValue(username_.get(), uname_len_, &derrived_key_);
 
-                derrived_key_.clearKey(); //clear the key
-                hashCredential(hash_); //update the credential hash
-            }
+            derrived_key_.clearKey(); //clear the key
+            hashCredential(hash_); //update the credential hash
         }
+        else
+        {
+            throw InvalidKeyException{};
+        }
+    }
+    else
+    {
+        throw InvalidDataException{};
     }
 
     #ifdef DBG_CRED
@@ -137,8 +167,6 @@ credential::credential(secStr& account_hex,
         uname_len_ = (uname_hex.size()/2);
         pw_len_ = (pw_hex.size()/2);
 
-        clearBuff((uint8_t*)hash_.data(), HASH_BYTE_SIZE);
-
         //decode data inputs from hex to binary
         //hex_buffers contain 2x the byte length of original fields
         //we know they will fit in buffers of half their size when decoded back into binary
@@ -156,22 +184,28 @@ credential::credential(secStr& account_hex,
     #ifdef DBG_CRED
     debugCredential();
     #endif
+
+    if (!isValid()) { throw InvalidDataException{}; }
 }
 
 /*****************
 * public methods *
 ******************/
-bool credential::isKeyed() const
+bool credential::isValid() const
 {
-    return derrived_key_.isValid();
-}
+    const size_t data_size{acnt_len_ + desc_len_ + uname_len_ + pw_len_};
+    bool validity{false};
 
-bool credential::isValid()
-{
-    skein_512_hash compare{};
-    hashCredential(compare);
+    // credentials with no data are considered invalid
+    if (data_size > 0)
+    {
+        skein_512_hash_t compare{};
+        hashCredential(compare);
 
-    return (compareWordBuff(hash_.data(), compare.data(), HASH_WORD_SIZE) == 0);
+        validity = (compareWordBuff(hash_.data(), compare.data(), HASH_WORD_SIZE) == 0);
+    }
+
+    return validity;
 }
 
 bool credential::updateDescription(secStr& description)
@@ -226,22 +260,22 @@ secStr credential::getField(const field field)
     return field_data;
 }
 
-secStr credential::getAccountStr()
+secStr credential::getAccount()
 {
     return getField(field::ACCOUNT);
 }
 
-secStr credential::getDescriptionStr()
+secStr credential::getDescription()
 {
     return getField(field::DESCRIPTION);
 }
 
-secStr credential::getPasswordStr()
+secStr credential::getPassword()
 {
     return getField(field::PASSWORD);
 }
 
-secStr credential::getUsernameStr()
+secStr credential::getUsername()
 {
     return getField(field::USERNAME);
 }
@@ -364,34 +398,20 @@ credential::~credential()
          << " }"<< endl;
     #endif
     //zero fill all buffers that might leak information
-    clearBuff(account_.get(), acnt_len_);
-    clearBuff(description_.get(), desc_len_);
-    clearBuff(password_.get(), pw_len_);
-    clearBuff(username_.get(), uname_len_);
-    clearBuff(reinterpret_cast<uint8_t*>(hash_.data()), HASH_BYTE_SIZE);
+    clearBuffer<uint8_t>(account_.get(), acnt_len_);
+    clearBuffer<uint8_t>(description_.get(), desc_len_);
+    clearBuffer<uint8_t>(password_.get(), pw_len_);
+    clearBuffer<uint8_t>(username_.get(), uname_len_);
+    acnt_len_ = 0;
+    desc_len_ = 0;
+    pw_len_ = 0;
+    uname_len_ = 0;
+    clearArray(hash_);
 }
 
 /******************
 * private methods *
 *******************/
-bool credential::checkHash()
-{
-    bool hash_match = true;
-    skein_512_hash test_hash{};
-
-    hashCredential(test_hash);
-
-    for (size_t sz=0; sz < HASH_WORD_SIZE; ++sz)
-    {
-        if (hash_[sz] != test_hash[sz])
-        {
-            hash_match = false;
-            break;
-        }
-    }
-
-    return hash_match;
-}
 
 bool credential::decryptValue(uint8_t* value, const size_t byte_size, credentialKey* key)
 {
@@ -400,16 +420,16 @@ bool credential::decryptValue(uint8_t* value, const size_t byte_size, credential
     if (value != nullptr && key != NULL)
     {
         //generate the nonce from the salt
-        uint64_t nonce[CIPHER_WORD_SIZE] = { 0 };
+        array<key_data_t, CIPHER_WORD_SIZE> nonce{};
         if (skeinHash(
                (uint8_t*)this->derrived_key_.saltBytes(),
                SALT_BYTE_SIZE,
-               (uint8_t*)nonce,
+               (uint8_t*)nonce.data(),
                KEY_BYTE_SIZE)
           )
         {
             //decrypt the value
-            ctrDecrypt(value, byte_size, (uint64_t*)nonce, (uint64_t*)derrived_key_.keyBytes());
+            ctrDecrypt(value, byte_size, nonce.data(), (uint64_t*)derrived_key_.keyBytes());
             success = true;
         }
     }
@@ -419,19 +439,19 @@ bool credential::decryptValue(uint8_t* value, const size_t byte_size, credential
 
 bool credential::encryptValue(uint8_t* value, const size_t byte_size, credentialKey* key)
 {
-    bool success = false;
+    bool success{false};
 
     if  (value != nullptr && key != NULL)
     {
         //generate the nonce from the derrived key
-        uint64_t nonce[CIPHER_WORD_SIZE] = { 0 };
+        array<key_data_t, CIPHER_WORD_SIZE> nonce{};
         if (skeinHash(key->saltBytes(),
                      SALT_BYTE_SIZE,
-                     (uint8_t*)nonce,
+                     (uint8_t*)nonce.data(),
                      KEY_BYTE_SIZE))
         {
             //ctr encrypt the value
-            ctrEncrypt(value, byte_size, (uint64_t*)nonce, (uint64_t*)derrived_key_.keyBytes());
+            ctrEncrypt(value, byte_size, nonce.data(), (uint64_t*)derrived_key_.keyBytes());
             success = true;
         }
     }
@@ -441,7 +461,7 @@ bool credential::encryptValue(uint8_t* value, const size_t byte_size, credential
 
 inline bool credential::updateField(secStr &new_val, unique_ptr<uint8_t[]> &field, size_t &field_len)
 {
-    bool success = false;
+    bool success{false};
 
     if (new_val.size() > 0 &&
         master_key_.isValid() &&
@@ -452,8 +472,8 @@ inline bool credential::updateField(secStr &new_val, unique_ptr<uint8_t[]> &fiel
 
         field_len = new_val.size();
         //allocate storage and copy the new value into the field
-        field = make_unique<uint8_t[]>(field_len);
-        memcpy(field.get(), new_val.byteStr(), field_len);
+        field = make_unique<uint8_t[]>(new_val.size());
+        copy(new_val.byteStr(), (new_val.byteStr()+new_val.size()), field.get());
 
         //encrypt the new description with the derrived key
         if (!encryptValue(field.get(), field_len, &derrived_key_))
@@ -471,7 +491,7 @@ inline bool credential::updateField(secStr &new_val, unique_ptr<uint8_t[]> &fiel
     return success;
 }
 
-void credential::hashCredential(skein_512_hash &buf)
+void credential::hashCredential(skein_512_hash_t &buf) const
 {
     SkeinCtx skein_context;
     skeinCtxPrepare(&skein_context, (const SkeinSize_t)SKEIN_SIZE);

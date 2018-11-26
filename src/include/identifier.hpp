@@ -1,13 +1,14 @@
 #pragma once
 
 #include "constants.h"
-#include "secureString.hpp"
+#include "secureString.hpp" //secStr class
 
-#include <array>
-#include <cstdint>
+#include <algorithm> //std::equal
+#include <array> //std::array
+#include <cstdint> // uint_xx types
 
-using identifier_t = std::array<uint64_t, ID_WORD_SIZE>;
 using id_data_t = uint64_t;
+using identifier_t = std::array<id_data_t, ID_WORD_SIZE>;
 
 /*
  * This object is essentially a giant unsigned integer used to store unique identifiers
@@ -23,16 +24,16 @@ class identifier
     identifier(secStr& key);
 
     // used for testing
-    explicit identifier(const uint64_t id) { id_[0] = id; }
+    explicit identifier(const id_data_t id) { id_[0] = id; }
 
     inline bool operator ==(identifier &rhs) const
     {
-      for (uint_fast8_t i=0; i<id_.size(); ++i)
-      {
-        if (id_[i] != rhs.id_[i]) { return false; }
-      }
+      return std::equal(id_.begin(), id_.end(), rhs.id_.begin());
+    };
 
-      return true;
+    inline bool operator ==(const identifier &rhs) const
+    {
+      return std::equal(id_.begin(), id_.end(), rhs.id_.begin());
     };
 
     inline bool operator <(identifier &rhs) const

@@ -4,7 +4,8 @@
 #include <memory> //std::unique_ptr
 #include <thread> //thread class
 #include <vector> //std::vector container
-#include "keyBase.hpp" //keyBase class to invoke clearKey() with
+#include "constants.h"
+#include "keyBase.hpp" //keyBase class template
 
 using std::chrono::duration;
 using std::chrono::milliseconds;
@@ -17,13 +18,13 @@ using std::vector;
 
 struct time_s
 {
-    bool s_running = true;
-    bool s_ticking = false;
-    bool s_triggered = false;
-    steady_clock* s_clock = nullptr;
-    steady_clock::time_point* s_timeout = nullptr;
-    thread* s_thread = nullptr;
-    vector<keyBase*>* s_keys = nullptr;
+    bool s_running{true};
+    bool s_ticking{false};
+    bool s_triggered{false};
+    steady_clock* s_clock{nullptr};
+    steady_clock::time_point* s_timeout{nullptr};
+    thread* s_thread{nullptr};
+    vector<keyBase<KEY_WORD_SIZE>*>* s_keys{nullptr};
 };
 
 /*
@@ -36,17 +37,17 @@ class timer
     /**************
     * Public Data *
     **************/
-    time_s args_;
+    time_s args_{};
 
-    timer(duration<unsigned int>& timeout);
+    explicit timer(duration<unsigned int>& timeout);
     ~timer();
 
     /*****************
     * Public Members *
     ******************/
-    bool registerKey(keyBase* key);
+    bool registerKey(keyBase<KEY_WORD_SIZE>* key);
 
-    bool unregisterKey(keyBase* key);
+    bool unregisterKey(keyBase<KEY_WORD_SIZE>* key);
 
     void reset();
 
@@ -59,11 +60,11 @@ class timer
     /***************
     * Private Data *
     ****************/
-    steady_clock clock_;
-    duration<unsigned int> duration_;
-    steady_clock::time_point timeout_;
-    vector<keyBase*> keys_;
-    thread bkgrd_thread_;
+    steady_clock clock_{};
+    duration<unsigned int> duration_{};
+    steady_clock::time_point timeout_{};
+    vector<keyBase<KEY_WORD_SIZE>*> keys_{};
+    thread bkgrd_thread_{};
 
     /***************
     * Constructors *

@@ -21,7 +21,7 @@ using std::endl;
  * Credential keys are derrived from from the master key by xoring their own randomly generated salt with the master key and hashing that with Skein.
  * They can be regenerated only if the master key is present (returning non null keys with getKeyBytes()) and the credentialKey is salted.
  */
-class credentialKey : protected keyBase<CIPHER_WORD_SIZE>
+class credentialKey : public keyBase<CIPHER_WORD_SIZE>
 {
     private:
     /***************

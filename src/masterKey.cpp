@@ -1,5 +1,6 @@
 #include "include/masterKey.hpp"
 #include "exceptions.hpp"
+#include "random.hpp"
 #include <algorithm>
 
 using std::any_of;
@@ -7,11 +8,21 @@ using std::copy;
 using std::fill;
 
 masterKey::masterKey(): keyBase<CIPHER_WORD_SIZE>()
-{}
+{
+    Random random{};
+    if (random.getBytes((uint8_t*)salt_.data(), (keyBase::byteSize())))
+    {
+        salted_ = true;
+    }
+    else
+    {
+        throw InvalidSaltHexException{};
+    }
+}
 
 masterKey::masterKey(secStr& salt_hex): keyBase<CIPHER_WORD_SIZE>()
 {
-    if(hexDecode(salt_hex.byteStr(), (uint8_t*)salt_.data(), salt_hex.size()) != nullptr)
+    if (hexDecode(salt_hex.byteStr(), (uint8_t*)salt_.data(), salt_hex.size()) != nullptr)
     {
         salted_ = true;
     }
@@ -48,9 +59,9 @@ bool masterKey::genKey(secStr& pw)
         if (passwordMeetsRequirements(pw) &&
             Random().getBytes((uint8_t*)salt_.data(), SALT_BYTE_SIZE) &&
             kdf_scrypt(pw.byteStr(), pw.size(),
-                       (uint8_t*)salt_.data(), SALT_BYTE_SIZE,
+                       (uint8_t*)salt_.data(), keyBase::byteSize(),
                        SCRYPT_N, SCRYPT_R, SCRYPT_P,
-                       (uint8_t*)key_.data(), KEY_BYTE_SIZE) == 0)
+                       (uint8_t*)key_.data(), keyBase::byteSize()) == 0)
         {
             salted_ = true;
         }
@@ -67,9 +78,9 @@ bool masterKey::inputPassword(secStr& pw)
     {
         if (passwordMeetsRequirements(pw) &&
             kdf_scrypt(pw.byteStr(), pw.size(),
-                       (uint8_t*)salt_.data(), SALT_BYTE_SIZE,
+                       (uint8_t*)salt_.data(), keyBase::byteSize(),
                        SCRYPT_N, SCRYPT_R, SCRYPT_P,
-                       (uint8_t*)key_.data(), KEY_BYTE_SIZE) == 0)
+                       (uint8_t*)key_.data(), keyBase::byteSize()) == 0)
         {
             success = true;
         }
@@ -84,7 +95,7 @@ bool masterKey::setKey(const key_data_t* key_words)
 
     if (!isKeyed())
     {
-        copy(key_words, key_words+KEY_WORD_SIZE, key_.data());
+        copy(key_words, key_words+keyBase::dataSize(), key_.data());
 
         success = true;
     }
@@ -96,7 +107,7 @@ bool masterKey::setSalt(const key_data_t* salt_words)
 {
     if (!salted_ && salt_words != nullptr)
     {
-        copy(salt_words, salt_words+SALT_WORD_SIZE, salt_.data());
+        copy(salt_words, salt_words+keyBase::dataSize(), salt_.data());
         salted_ = true;
     }
 
@@ -108,10 +119,6 @@ const uint8_t* masterKey::keyBytes() const { return (uint8_t*)key_.data(); }
 const key_data_t* masterKey::keyData() const { return key_.data(); }
 
 const uint8_t* masterKey::saltBytes() const { return (uint8_t*)salt_.data(); }
-
-constexpr size_t masterKey::byteSize() const { return keyBase::byteSize(); }
-
-constexpr size_t masterKey::dataSize() const { return keyBase::dataSize(); }
 
 void masterKey::clearKey()
 {

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <cstring>
 #include <gtest/gtest.h>
@@ -7,21 +8,22 @@
 #include "masterKey.hpp"
 
 using std::array;
+using std::equal;
 
 class masterKeyTest : public ::testing::Test
 {
 };
 
-TEST(masterKeyTest, DefaultConstructedMasterKeyIsNotSalted)
+TEST(masterKeyTest, DefaultConstructedMasterKeyIsSalted)
 {
     masterKey mk{};
-    ASSERT_FALSE(mk.isSalted());
+    ASSERT_TRUE(mk.isSalted());
 }
 
 TEST(masterKeyTest, DefaultConstructedMasterKeyIsNotKeyed)
 {
     masterKey mk{};
-    ASSERT_FALSE(mk.isSalted());
+    ASSERT_FALSE(mk.isKeyed());
 }
 
 TEST(masterKeyTest, DefaultConstructedMasterKeyIsNotValid)
@@ -48,11 +50,13 @@ TEST(masterKeyTest, CanSetSalt)
 {
     masterKey mk{};
     array<key_data_t, 8> salt{0, 1, 2, 3, 4, 5, 6, 7};
-    mk.setSalt(salt.data());
 
+    mk.clearSalt();
+    ASSERT_FALSE(mk.isSalted());
+    mk.setSalt(salt.data());
     ASSERT_TRUE(mk.isSalted());
     auto salt_bytes{mk.saltBytes()};
-    ASSERT_EQ(0, memcmp(salt_bytes, (uint8_t*)salt.data(), salt.size()));
+    ASSERT_TRUE(equal(salt_bytes, salt_bytes+mk.byteSize(), (uint8_t*)salt.data()));
 }
 
 TEST(masterKeyTest, CanClearSalt)
@@ -73,19 +77,22 @@ TEST(masterKeyTest, CanSetKey)
     mk.setKey(key.data());
 
     ASSERT_TRUE(mk.isKeyed());
-    auto key_bytes{mk.keyBytes()};
-    ASSERT_EQ(0, memcmp(key_bytes, (uint8_t*)key.data(), key.size()));
+    auto key_data{mk.keyData()};
+    ASSERT_TRUE(equal(key_data, key_data+mk.dataSize(), key.data()));
 }
 
 TEST(masterKeyTest, CanClearKey)
 {
     masterKey mk{};
+    array<key_data_t, 8> empty{};
     array<key_data_t, 8> key{0, 1, 2, 3, 4, 5, 6, 7};
     mk.setKey(key.data());
 
     ASSERT_TRUE(mk.isKeyed());
     mk.clearKey();
     ASSERT_FALSE(mk.isKeyed());
+    auto raw_key = mk.keyData();
+    ASSERT_TRUE(equal(raw_key, raw_key+mk.dataSize(), empty.data()));
 }
 
 TEST(masterKeyTest, IsValidReturnsTrueWhenSaltAndKeyAreNonZero)
@@ -102,6 +109,7 @@ TEST(masterKeyTest, InputPasswordFailsWhenUnsalted)
 {
     masterKey mk{};
     secStr pw{"password1234"};
+    mk.clearSalt();
     ASSERT_FALSE(mk.inputPassword(pw));
 }
 

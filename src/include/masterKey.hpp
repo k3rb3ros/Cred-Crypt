@@ -13,7 +13,7 @@
 #include "util.h" //hexDecode()
 
 //TODO make this thread safe
-class masterKey : protected keyBase<CIPHER_WORD_SIZE>
+class masterKey : public keyBase<CIPHER_WORD_SIZE>
 {
     private:
     /******************
@@ -40,6 +40,9 @@ class masterKey : protected keyBase<CIPHER_WORD_SIZE>
     /*****************
     * public members *
     *****************/
+    constexpr size_t byteSize() const { return keyBase::byteSize(); }
+    constexpr size_t dataSize() const { return keyBase::dataSize(); }
+
     bool genKey(secStr& pw);
     bool isKeyed() const;
     bool isSalted() const;
@@ -50,8 +53,6 @@ class masterKey : protected keyBase<CIPHER_WORD_SIZE>
     const uint8_t* keyBytes() const;
     const key_data_t* keyData() const;
     const uint8_t* saltBytes() const;
-    constexpr size_t byteSize() const;
-    constexpr size_t dataSize() const;
     void clearSalt();
     void clearKey();
 };

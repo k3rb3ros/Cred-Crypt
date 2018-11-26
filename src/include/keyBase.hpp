@@ -35,8 +35,10 @@ class keyBase
         return std::any_of(key_.begin(), key_.end(), is_keyed);
     }
     const uint8_t* keyBytes() const { return static_cast<uint8_t*>(key_.data()); }
-    constexpr size_t byteSize() const { return key_.size(); }
-    constexpr size_t dataSize() const { return key_.size() / sizeof(key_data_t); }
+    // byte size of a key
+    constexpr size_t byteSize() const { return key_.size() * sizeof(key_data_t); }
+    // number of elements of key_data_t
+    constexpr size_t dataSize() const { return key_.size(); }
     void clearKey() { std::fill(key_.begin(), key_.end(), 0); }
     void clearSalt() { std::fill(salt_.begin(), key_.end(), 0); }
 

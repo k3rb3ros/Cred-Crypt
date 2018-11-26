@@ -11,8 +11,8 @@ struct credentialData
 {
     secStr account_{};
     secStr description_{};
-    secStr password_{};
     secStr username_{};
+    secStr password_{};
 
     static bool isValid(const credentialData& cred)
     {

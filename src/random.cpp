@@ -1,5 +1,8 @@
 #include "include/random.hpp"
 
+using std::make_unique;
+using std::unique_ptr;
+
 Random::Random()
 {
     if (exists(HW_RNG)) //hardware random number device found on some *nix systems
@@ -23,12 +26,12 @@ inline bool Random::isGood()
     return is_good;
 }
 
-bool Random::getBytes(uint8_t* buffer, size_t byte_size)
+bool Random::getBytes(uint8_t* buffer, const size_t byte_size)
 {
     if (rand.good())
     {
         rand.read((char*)buffer, byte_size);
-        if(rand.good()) { return true; }
+        if (rand.good()) { return true; }
     }
     return false;
 }
@@ -46,7 +49,7 @@ uint8_t Random::getByte()
     return 0;
 }
 
-uint8_t Random::getByte(uint8_t upper_lim)
+uint8_t Random::getByte(const uint8_t upper_lim)
 {
     if (rand.good())
     {
@@ -73,7 +76,7 @@ uint32_t Random::getInt()
     return 0;
 }
 
-uint32_t Random::getInt(uint32_t upper_lim)
+uint32_t Random::getInt(const uint32_t upper_lim)
 {
     if (rand.good())
     {
@@ -102,7 +105,7 @@ uint64_t Random::getLong()
     return 0;
 }
 
-uint64_t Random::getLong(uint64_t upper_lim)
+uint64_t Random::getLong(const uint64_t upper_lim)
 {
     if (rand.good())
     {
@@ -117,17 +120,16 @@ uint64_t Random::getLong(uint64_t upper_lim)
     return 0;
 }
 
-uint8_t* Random::getBytes(size_t byte_size)
+unique_ptr<uint8_t[]> Random::getBytes(const size_t byte_size)
 {
+    unique_ptr<uint8_t[]> bytes{};
     if (rand.good())
     {
-        uint8_t* bytes = new uint8_t[byte_size];
-        rand.read((char*)bytes, byte_size);
-        if(rand.good()) { return bytes; }
-        else { delete[] bytes; }
+        bytes = make_unique<uint8_t[]>(byte_size);
+        rand.read((char*)bytes.get(), byte_size);
     }
 
-    return NULL;
+    return bytes;
 }
 
 Random::~Random()

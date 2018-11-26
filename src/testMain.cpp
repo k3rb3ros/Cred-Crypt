@@ -1,9 +1,9 @@
 #include <iostream> //cout, endl
 #include <sstream> //stringstream class
 #include <string> //std::string class
-#include "include/api.hpp" //CredCrypt api
-#include "include/credentialData.hpp" //credentialData class
-#include "include/secureString.hpp" //secStr class
+#include "api.hpp" //CredCrypt api
+#include "credentialData.hpp" //credentialData class
+#include "secureString.hpp" //secStr class
 
 using std::cout;
 using std::endl;

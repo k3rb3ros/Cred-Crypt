@@ -51,11 +51,19 @@ struct InvalidCredentialException : public std::exception
     }
 };
 
+struct InvalidDataException : public std::exception
+{
+    const char* what() const noexcept
+    {
+        return "Invalid data passed to credential constructor";
+    }
+};
+
 struct InvalidKeyException : public std::exception
 {
     const char* what() const noexcept
     {
-        return "A credential access was requested without a valid key";
+        return "Credential creation or access was requested without a valid key";
     }
 };
 
