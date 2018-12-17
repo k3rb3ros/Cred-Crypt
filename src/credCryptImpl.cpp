@@ -30,7 +30,7 @@ bool credCryptImpl::clearCredentials()
 
 bool credCryptImpl::credentialExists(secStr& acnt)
 {
-  return reg_.exists(identifier{acnt});
+    return reg_.exists(identifier{acnt});
 }
 
 //The current valid rule is that a credential must have at least an account name, username and password
@@ -41,16 +41,15 @@ bool credCryptImpl::credentialIsValid(const credentialData& cred) const
 
 bool credCryptImpl::deleteCredential(secStr& acnt)
 {
-    bool success = false;
-
-    size_t start_size = reg_.size();
+    bool erased{false};
+    const size_t start_size{reg_.size()};
 
     if (start_size > 0)
     {
-        success = reg_.erase(identifier{acnt});
+        erased = reg_.erase(identifier{acnt});
     }
 
-    return success;
+    return erased && (reg_.size() == start_size - 1);
 }
 
 bool credCryptImpl::inputPassword(secStr& pw)

@@ -89,21 +89,26 @@ credential::credential(secStr& account,
     master_key_(master_key),
     derrived_key_(master_key_)
 {
-    if (acnt_len_ > 0 && desc_len_ > 0 && uname_len_ > 0 && uname_len_ > 0)
+    if (acnt_len_ > 0 && uname_len_ > 0 && pw_len_ > 0)
     {
         if (master_key_.isValid() && derrived_key_.genKey())
         {
             //copy data into the credential
             copy(account.byteStr(), (account.byteStr() + acnt_len_), account_.get());
-            copy(description.byteStr(), (description.byteStr() + desc_len_), description_.get());
             copy(username.byteStr(), (username.byteStr() + uname_len_), username_.get());
             copy(password.byteStr(), (password.byteStr() + pw_len_), password_.get());
 
             //encrypt the data
             encryptValue(account_.get(), acnt_len_, &derrived_key_);
-            encryptValue(description_.get(), desc_len_, &derrived_key_);
             encryptValue(password_.get(), pw_len_, &derrived_key_);
             encryptValue(username_.get(), uname_len_, &derrived_key_);
+
+            // handle optional description
+            if (desc_len_ > 0)
+            {
+                copy(description.byteStr(), (description.byteStr() + desc_len_), description_.get());
+                encryptValue(description_.get(), desc_len_, &derrived_key_);
+            }
 
             derrived_key_.clearKey(); //clear the key
             hashCredential(hash_); //update the credential hash

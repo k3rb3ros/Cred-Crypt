@@ -1,24 +1,27 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.8)
 
 #Clang is our preferred compiler
 set (CMAKE_C_COMPILER "/usr/bin/clang")
 set (CMAKE_CXX_COMPILER "/usr/bin/clang++")
 #having these compiler flags after project causes an infinite loop
 
-project (Cred_Crypt)
+project (Cred_Crypt
+         DESCRIPTION "Cred_Crypt password manager top level make list"
+         LANGUAGES C CXX
+        )
 
 include (CheckIncludeFiles)
 
 set (CMAKE_BUILD_TYPE Debug)
 
 #compiler flags
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wall -Wextra -pedantic -O0")
-set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic -O0")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
+set (c_compile_features c_std_11)
+set (c_compile_options -Wall -Wextra -pedantic -O0 -g)
+set (cxx_compile_features cxx_std_17)
+set (cxx_compile_options -Wall -Wextra -pedantic -O0 -g)
 
 #libary versions
-set (CREDCRYPTVERSION "0.7.6")
+set (CREDCRYPTVERSION "0.8.0")
 set (CREDCRYPTSOVERSION "0.7")
 set (CJSONVERSION "1.2.0")
 set (CJSONSOVERSION "1.2")

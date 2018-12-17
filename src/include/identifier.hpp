@@ -101,6 +101,16 @@ class identifier
       return id_.data();
     }
 
+    constexpr size_t byte_size() const
+    {
+      return (id_.size() * sizeof(id_data_t));
+    }
+
+    constexpr size_t word_size() const
+    {
+      return id_.size();
+    }
+
     private:
 
     mutable identifier_t id_{};

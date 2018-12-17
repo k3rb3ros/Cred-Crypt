@@ -51,7 +51,7 @@ int main()
 {
     credCrypt instance;
     credentialData dummy_cred;
-    secStr out_f(".cc.crd");
+    secStr out_f((uint8_t*)"test.crd", 9);
 
     dummy_cred.account_ = secStr("account");
     dummy_cred.description_ = secStr("description");

@@ -1,6 +1,9 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.8)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+set (CMAKE_BUILD_TYPE Debug)
+set (CMAKE_VERBOSE_MAKEFILE ON)
 
 #C files for LibCredCrypt
 set (CRED_CRYPT_C_SRC
@@ -71,24 +74,31 @@ set (CLI_SRC
     )
 
 add_library (cJSON SHARED ${CJSON_SRC})
-add_library (CredCrypt SHARED ${CREDCRYPT_SRC})
-add_library (scrypt_KDF SHARED ${SCRYPT_SRC})
-add_library (skein3fish SHARED ${S3F_SRC})
-
+target_compile_features(cJSON PRIVATE ${c_compile_features})
+target_compile_options(cJSON PRIVATE ${c_compile_options})
 set_target_properties (cJSON PROPERTIES VERSION ${CJSONVERSION}
                        SOVERSION ${CJSONSOVERSION})
-
+add_library (CredCrypt SHARED ${CREDCRYPT_SRC})
+target_compile_features(CredCrypt PRIVATE ${cxx_compile_features})
+target_compile_options(CredCrypt PRIVATE ${cxx_compile_options})
 set_target_properties (CredCrypt PROPERTIES VERSION ${CREDCRYPTVERSION}
                        SOVERSION ${CREDCRYPTSOVERSION})
-
+add_library (scrypt_KDF SHARED ${SCRYPT_SRC})
+target_compile_features(scrypt_KDF PRIVATE ${c_compile_features})
+target_compile_options(scrypt_KDF PRIVATE ${c_compile_options})
 set_target_properties (scrypt_KDF PROPERTIES VERSION ${SCRYPTVERSION}
                        SOVERSION ${SCRYPTSOVERSION})
-
+add_library (skein3fish SHARED ${S3F_SRC})
+target_compile_features(skein3fish PRIVATE ${c_compile_features})
+target_compile_options(skein3fish PRIVATE ${c_compile_options})
 set_target_properties (skein3fish PROPERTIES VERSION ${S3FVERSION}
                        SOVERSION ${S3FSOVERSION})
 
-add_executable ("API_Test" ${TEST_SRC})
+add_executable (API_Test ${TEST_SRC})
+target_compile_features(API_Test PRIVATE ${cxx_compile_features})
+target_compile_options(API_Test PRIVATE ${cxx_compile_options})
+target_link_libraries (API_Test  cJSON CredCrypt scrypt_KDF skein3fish ${CMAKE_THREAD_LIBS_INIT})
 add_executable (${PROJECT_NAME} ${CLI_SRC})
-
-target_link_libraries ("API_Test"  cJSON CredCrypt scrypt_KDF skein3fish ${CMAKE_THREAD_LIBS_INIT})
+target_compile_features(${PROJECT_NAME} PRIVATE ${cxx_compile_features})
+target_compile_options(${PROJECT_NAME} PRIVATE ${cxx_compile_options})
 target_link_libraries (${PROJECT_NAME}  cJSON CredCrypt scrypt_KDF skein3fish ${CMAKE_THREAD_LIBS_INIT})

@@ -54,16 +54,20 @@ bool masterKey::isValid() const
 
 bool masterKey::genKey(secStr& pw)
 {
-    if (!salted_ && !isKeyed())
+    if (passwordMeetsRequirements(pw))
     {
-        if (passwordMeetsRequirements(pw) &&
-            Random().getBytes((uint8_t*)salt_.data(), SALT_BYTE_SIZE) &&
+        // generate a random salt if this is a new key
+        if (!salted_)
+        {
+            salted_ = Random().getBytes((uint8_t*)salt_.data(), SALT_BYTE_SIZE);
+        }
+
+        if (salted_)
+        {
             kdf_scrypt(pw.byteStr(), pw.size(),
                        (uint8_t*)salt_.data(), keyBase::byteSize(),
                        SCRYPT_N, SCRYPT_R, SCRYPT_P,
-                       (uint8_t*)key_.data(), keyBase::byteSize()) == 0)
-        {
-            salted_ = true;
+                       (uint8_t*)key_.data(), keyBase::byteSize());
         }
     }
 

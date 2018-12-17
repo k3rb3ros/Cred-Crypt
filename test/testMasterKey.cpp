@@ -133,3 +133,14 @@ TEST(masterKeyTest, CanGetKeyAsKeyDataTPtr)
     ASSERT_EQ((key_data_t*)mk.keyBytes(), mk.keyData());
     ASSERT_STREQ("PKm", typeid(mk.keyData()).name());
 }
+
+TEST(masterKeyTest, GenKeyPopulatesKey)
+{
+    secStr pw{"password1234"};
+    secStr salt_hex{"0001020304050607"};
+    masterKey mk{salt_hex};
+    ASSERT_FALSE(mk.isValid());
+
+    mk.genKey(pw);
+    ASSERT_TRUE(mk.isValid());
+}

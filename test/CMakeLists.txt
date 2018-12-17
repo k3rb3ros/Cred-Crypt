@@ -1,13 +1,12 @@
 project (Tests)
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/../src/include)
-
 #CPP files for tests
 set (TEST_SRC
      testCredential.cpp
      testCtrMode.cpp
-     testOcbMode.cpp
+     testIdentifier.cpp
      testMasterKey.cpp
+     testOcbMode.cpp
      testRegistry.cpp
      testSecureString.cpp
      testMain.cpp
@@ -39,6 +38,13 @@ add_custom_command (OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${LIBDIRNAME}
     COMMAND ln -s ${GTEST_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/${LIBDIRNAME})
 
 add_executable (${PROJECT_NAME} ${TEST_SRC} ${APP_CPP_SRC} ${APP_C_SRC})
+target_compile_features (${PROJECT_NAME} PRIVATE ${cxx_compile_features})
+target_compile_options (${PROJECT_NAME} PRIVATE ${cxx_compile_options})
+target_include_directories (${PROJECT_NAME}
+                            PRIVATE
+                            ${CMAKE_CURRENT_SOURCE_DIR}/include
+                            ${CMAKE_CURRENT_SOURCE_DIR}/../src/include
+                           )
 target_link_libraries (${PROJECT_NAME}
                        scrypt_KDF
                        skein3fish
