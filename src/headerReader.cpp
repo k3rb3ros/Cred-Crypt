@@ -1,13 +1,5 @@
 #include "include/headerReader.hpp"
 
-headerReader::headerReader(masterKey* master_key) : headerBase(master_key),
-                                                          decrypted_(false),
-                                                          read_(false)
-{ /*nop*/ }
-
-headerReader::~headerReader() noexcept
-{ /*nop*/ }
-
 bool headerReader::read(istream &is)
 {
     read_ = false;
@@ -32,7 +24,7 @@ bool headerReader::decryptHeaderData()
     bool decrypted = false;
     ocbCtx ctx;
 
-    if (ocbSetup(&ctx, (uint64_t*)mk_->keyBytes(), header_.salt))
+    if (ocbSetup(&ctx, (uint64_t*)mk_.keyData(), header_.salt.data()))
     {
         /* decrypting out of place allows us to not have to reverse the operation if
         * decrypting fails for whatever reason. So we declare a temp header to store the
@@ -71,11 +63,12 @@ bool headerReader::headerIsValid(secStr &pw)
     {
         //try to decrypt the header with the salt from the file and the password from the user
         //generate a master key with the salt in the header and the password provided
-        mk_->setSalt(header_.salt); mk_->inputPassword(pw);
+        mk_.setSalt(header_.salt.data());
+        mk_.inputPassword(pw);
 
         //Because OCB is authenticated a success in decryption implies that
         //the password and salt are correct
-        if (!decrypted_ && mk_->isValid())
+        if (!decrypted_ && mk_.isValid())
         {
             decrypted_ = decryptHeaderData();
         }
@@ -87,8 +80,8 @@ bool headerReader::headerIsValid(secStr &pw)
         }
         else //decryption failed so clear the salt and pw from the master key
         {
-            mk_->clearSalt();
-            mk_->clearKey();
+            mk_.clearSalt();
+            mk_.clearKey();
         }
     }
 

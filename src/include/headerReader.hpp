@@ -20,12 +20,12 @@ class headerReader : public headerBase
     /**************
     * Constructor *
     **************/
-    headerReader(masterKey* master_key);
+    explicit headerReader(masterKey& master_key) : headerBase(master_key) {};
 
     /*************
     * Destructor *
     *************/
-    ~headerReader() noexcept;
+    ~headerReader() noexcept = default;
 
     /*****************
     * Public methods *
@@ -44,8 +44,8 @@ class headerReader : public headerBase
     /***************
     * Private Data *
     ***************/
-    bool decrypted_;
-    bool read_;
+    bool decrypted_{false};
+    bool read_{false};
 
     /******************
     * Private Members *

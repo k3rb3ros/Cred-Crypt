@@ -398,8 +398,8 @@ ostream& operator <<(std::ostream &os, const credential* c)
 credential::~credential()
 {
     #ifdef DBG_CRED
-    uniqe_ptr<uint8_t*> id_hex(new uint8_t[2*ID_BYTE_SIZE+1]());
-    cout << "Destructor called on credential { " << hexEncode((uint8_t*)id_, id_hex, ID_BYTE_SIZE)
+    unique_ptr<uint8_t> id_hex(new uint8_t[2*ID_BYTE_SIZE+1]());
+    cout << "Destructor called on credential { " << hexEncode((uint8_t*)id_.data(), id_hex.get(), ID_BYTE_SIZE)
          << " }"<< endl;
     #endif
     //zero fill all buffers that might leak information
@@ -529,24 +529,24 @@ void credential::debugCredential() const
     unique_ptr<uint8_t[]> hash_hex(new uint8_t[(2*HASH_BYTE_SIZE)+1]());
 
     //get the original content and hex encode it
-    hexEncode(account_, acnt_hex, acnt_len_);
-    hexEncode(description_, desc_hex, desc_len_);
-    hexEncode(password_, pw_hex, pw_len_);
-    hexEncode(username_, uname_hex, uname_len_);
-    hexEncode(derrived_key_.saltBytes(), salt_hex, SALT_BYTE_SIZE);
-    hexEncode((uint8_t*)id_, id_hex, ID_BYTE_SIZE);
-    hexEncode((uint8_t*)hash_, hash_hex, HASH_BYTE_SIZE);
+    hexEncode(account_.get(), acnt_hex.get(), acnt_len_);
+    hexEncode(description_.get(), desc_hex.get(), desc_len_);
+    hexEncode(password_.get(), pw_hex.get(), pw_len_);
+    hexEncode(username_.get(), uname_hex.get(), uname_len_);
+    hexEncode(derrived_key_.saltBytes(), salt_hex.get(), SALT_BYTE_SIZE);
+    hexEncode((uint8_t*)id_.data(), id_hex.get(), ID_BYTE_SIZE);
+    hexEncode((uint8_t*)hash_.data(), hash_hex.get(), HASH_BYTE_SIZE);
 
     //print all the info to std out
     cout << "Credential DEBUG:" << endl
               << "{" << endl
-              << "\taccount:" << acnt_hex << ":" << acnt_len_ << endl
-              << "\tdescription:" << desc_hex << ":" << desc_len_ << endl
-              << "\tusername:" << uname_hex << ":" << uname_len_ << endl
-              << "\tpassword:" << pw_hex << ":" << pw_len_ << endl
-              << "\tsalt:" << salt_hex << ":" << SALT_BYTE_SIZE << endl
-              << "\tid:" << id_hex << ":" << ID_BYTE_SIZE << endl
-              << "\thash:" << hash_hex << ":" << HASH_BYTE_SIZE << endl
+              << "\taccount:" << acnt_hex.get() << ":" << acnt_len_ << endl
+              << "\tdescription:" << desc_hex.get() << ":" << desc_len_ << endl
+              << "\tusername:" << uname_hex.get() << ":" << uname_len_ << endl
+              << "\tpassword:" << pw_hex.get() << ":" << pw_len_ << endl
+              << "\tsalt:" << salt_hex.get() << ":" << SALT_BYTE_SIZE << endl
+              << "\tid:" << id_hex.get() << ":" << ID_BYTE_SIZE << endl
+              << "\thash:" << hash_hex.get() << ":" << HASH_BYTE_SIZE << endl
               << "}" << endl << endl;
 }
 #endif

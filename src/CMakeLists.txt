@@ -80,7 +80,7 @@ set_target_properties (cJSON PROPERTIES VERSION ${CJSONVERSION}
                        SOVERSION ${CJSONSOVERSION})
 add_library (CredCrypt SHARED ${CREDCRYPT_SRC})
 target_compile_features(CredCrypt PRIVATE ${cxx_compile_features})
-target_compile_options(CredCrypt PRIVATE ${cxx_compile_options})
+target_compile_options(CredCrypt PRIVATE ${cxx_compile_options} -DDBG_CRED)
 set_target_properties (CredCrypt PROPERTIES VERSION ${CREDCRYPTVERSION}
                        SOVERSION ${CREDCRYPTSOVERSION})
 add_library (scrypt_KDF SHARED ${SCRYPT_SRC})

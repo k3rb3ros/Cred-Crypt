@@ -4,8 +4,9 @@
  * The header class is used to store the information required to decrypt serialized credentials
  */
 
+#include <algorithm> //std::copy, std::fill
+#include <array> //std::aray
 #include <cstdint> //uintxx_t types
-#include <cstring> //memcpy
 #include "constants.h" //SALT_WORD_SIZE
 #include "exceptions.hpp" //nullKeyException
 #include "masterKey.hpp" //masterKey class
@@ -26,14 +27,14 @@
 struct header
 {
     //Crypto section
-    uint64_t salt[SALT_WORD_SIZE] = { 0 };
+    std::array<uint64_t, SALT_WORD_SIZE> salt{};
     //data section
-    uint64_t magic_number = MAGIC_NUMBER;
-    uint64_t data_size = 0;
-    double version_major = VERSION_MAJOR;
-    uint64_t version_minor = VERSION_MINOR;
+    uint64_t magic_number{MAGIC_NUMBER};
+    uint64_t data_size{0};
+    double version_major{VERSION_MAJOR};
+    uint64_t version_minor{VERSION_MINOR};
     //end data section
-    uint64_t tag[OCB_TAG_WORD_SIZE] = { 0 }; //does not count as header data
+    std::array<uint64_t, OCB_TAG_WORD_SIZE> tag{}; //does not count as header data
 };
 
 //TODO add a reference to the timer to prevent the key from timing out when performing operations that need it
@@ -43,39 +44,34 @@ class headerBase
     /**************
     * Constructor *
     **************/
-    explicit headerBase(masterKey* master_key) : mk_(master_key)
+    explicit headerBase(masterKey& master_key) : mk_(master_key)
     {
-        if (mk_ != nullptr)
+        //copy the salt to the header if the masterKey is salted
+        if (mk_.isSalted())
         {
-            //copy the salt to the header if the masterKey is salted
-            if (mk_->isSalted())
-            {
-                memcpy((uint8_t*)header_.salt, mk_->saltBytes(), SALT_BYTE_SIZE);
-            }
+            std::copy(mk_.saltBytes(), mk_.saltBytes()+mk_.byteSize(), (uint8_t*)header_.salt.data());
         }
-        else { throw NullKeyException(); }
     }
-    
+
     /*************
     * Destructor *
     *************/
     ~headerBase() noexcept
     {
-        clearBuff((uint8_t*)&header_, sizeof(header));
+        std::fill((uint8_t*)&header_, (uint8_t*)&header_ + sizeof(header), 0);
     }
 
     bool isValid() const
     {
-        return (mk_ != nullptr &&
-                mk_->isSalted() &&
+        return (mk_.isSalted() &&
                 header_.salt[0] != 0 &&
                 header_.salt[SALT_WORD_SIZE-1] != 0);
     }
-    
+
     protected:
     /*****************
     * Protected Data *
     *****************/
-    masterKey* mk_;
-    header header_;
+    masterKey& mk_;
+    header header_{};
 };

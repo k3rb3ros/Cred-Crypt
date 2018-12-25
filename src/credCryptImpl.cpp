@@ -179,7 +179,7 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
 
     if (ifs && ifs.is_open())
     {
-        headerReader HR(&master_key_);
+        headerReader HR(master_key_);
         vector<unique_ptr<credential>> creds_parsed{};
         parser P(master_key_, creds_parsed);
 
@@ -269,7 +269,7 @@ bool credCryptImpl::saveCredentialsToFile(secStr& f_name)
 {
     timer_.reset();
     bool success = false;
-    headerWriter HW(&master_key_);
+    headerWriter HW(master_key_);
     auto creds = reg_.traverse();
 
     if (creds.size() > 0 && master_key_.isValid() && HW.isValid())

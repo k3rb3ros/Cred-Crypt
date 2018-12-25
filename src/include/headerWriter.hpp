@@ -12,14 +12,14 @@
 class headerWriter : public headerBase
 {
     public:
-    
+
     /**************
     * Constructor *
     **************/
-    headerWriter(masterKey* master_key);
+    headerWriter(masterKey& master_key) : headerBase(master_key) {};
 
     //Destructor
-    ~headerWriter() noexcept;
+    ~headerWriter() noexcept = default;
 
     /*****************
     * Public methods *
@@ -27,13 +27,13 @@ class headerWriter : public headerBase
     //write the header to the output stream
     bool write(ostream& os);
 
-    void setCredSize(uint64_t size);
+    void setCredSize(const uint64_t size);
 
     private:
     /***************
     * Private Data *
     ***************/
-    bool encrypted_;
+    bool encrypted_{false};
 
     bool encryptHeader();
 };
