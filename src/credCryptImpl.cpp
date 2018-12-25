@@ -1,9 +1,11 @@
 #include <fstream>
+#include <iostream> //cerr
 #include "credCryptImpl.hpp"
 #include "identifier.hpp" //identifier class
 #include "ocbMode.h" //ocbSetup(), ocbEncrypt()
 #include "util.h" //hexEncode()
 
+using std::cerr;
 using std::ofstream;
 
 credCryptImpl::credCryptImpl() : clean_(true), timeout_(30), timer_(timeout_)
@@ -18,14 +20,18 @@ credCryptImpl::~credCryptImpl()
 
 bool credCryptImpl::clearCredentials()
 {
-    auto nodes = reg_.traverse();
+    bool success{true};
+    auto nodes{reg_.traverse()};
 
     for (auto &it : nodes)
     {
-        reg_.erase(it->getIdentifier());
+        if (!reg_.erase(it->getIdentifier()))
+        {
+            success = false;
+        }
     }
 
-    return reg_.size() == 0;
+    return success && reg_.size() == 0;
 }
 
 bool credCryptImpl::credentialExists(secStr& acnt)

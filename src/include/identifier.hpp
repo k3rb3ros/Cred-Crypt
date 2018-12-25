@@ -40,17 +40,13 @@ class identifier
     {
       bool is_less_than = false;
 
-      for (uint_fast8_t i=0; i<id_.size(); ++i)
+      // find the first index where the two indexes that differ (if any)
+      auto mismatch = std::mismatch(id_.begin(), id_.end(), rhs.id_.begin());
+
+      // compare that at the mismatch lhs < rhs
+      if (mismatch.first != id_.end() && *mismatch.first < *mismatch.second)
       {
-        if (id_[i] < rhs.id_[i])
-        {
           is_less_than = true;
-          break;
-        }
-        else if (id_[i] < rhs.id_[i])
-        {
-          break;
-        }
       }
 
       return is_less_than;
@@ -60,37 +56,29 @@ class identifier
     {
       bool is_less_than = false;
 
-      for (uint_fast8_t i=0; i<id_.size(); ++i)
+      // find the first index where the two indexes that differ (if any)
+      auto mismatch = std::mismatch(id_.begin(), id_.end(), rhs.id_.begin());
+
+      // compare that at the mismatch lhs < rhs
+      if (mismatch.first != id_.end() && *mismatch.first < *mismatch.second)
       {
-        if (id_[i] < rhs.id_[i])
-        {
           is_less_than = true;
-          break;
-        }
-        else if (id_[i] < rhs.id_[i])
-        {
-          break;
-        }
       }
 
       return is_less_than;
-    };
+   };
 
     inline bool operator >(identifier &rhs) const
     {
       bool is_greater_than = false;
 
-      for (uint_fast8_t i=0; i<id_.size(); ++i)
+      // find the first index where the two indexes that differ (if any)
+      auto mismatch = std::mismatch(id_.begin(), id_.end(), rhs.id_.begin());
+
+      // compare that at the mismatch lhs > rhs
+      if (mismatch.first != id_.end() && *mismatch.first > *mismatch.second)
       {
-        if (id_[i] > rhs.id_[i])
-        {
           is_greater_than = true;
-          break;
-        }
-        else if (id_[i] > rhs.id_[i])
-        {
-          break;
-        }
       }
 
       return is_greater_than;

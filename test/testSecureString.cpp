@@ -392,19 +392,3 @@ TEST(unitTestSecureString, OutStreamOP)
     ASSERT_EQ(actual.size(), 14u);
     ASSERT_EQ(expected.compare(actual), 0);
 }
-
-/* Test that the secure string dtor zero fills string on deletion */
-TEST(unitTestSecureString, DestructorClearsStringData)
-{
-    std::string msg = "Super secret message that I don't want to be in memory after this object goes out of scope";
-    secStr* tstMsg = new secStr(msg);
-    const size_t sz = tstMsg->size(); //get the length of the string
-
-    //This will be a deliberate dangling reference
-    const uint8_t* content = tstMsg->byteStr();
-    //delete the secStr calling its destructor that should zero out all the data in the string
-    delete tstMsg;
-
-    unique_ptr<uint8_t[]> null_cmp(new uint8_t[sz]());
-    ASSERT_TRUE(memcmp(content, null_cmp.get(), sizeof(uint8_t)) == 0);
-}

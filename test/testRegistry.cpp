@@ -145,3 +145,27 @@ TEST(RegistryTest, RegistryCanHandleOverOneHundredThousandNodes)
     search = reg.search(identifier{100000});
     ASSERT_EQ(100000UL, search->get_value());
 }
+
+TEST(RegistryTest, RegistryCanDeleteAllInsertedMembers)
+{
+    registry<testNode> reg{};
+
+    // insert 100 nodes
+    for (uint64_t i=0; i<100; ++i)
+    {
+        unique_ptr<testNode> node = make_unique<testNode>(i);
+        reg.insert(std::move(node));
+    }
+
+    ASSERT_EQ(100UL, reg.size());
+
+    // delete 100 nodes
+    for (uint64_t i=0; i<100; ++i)
+    {
+        auto search = reg.search(identifier{i});
+        ASSERT_TRUE(search);
+        ASSERT_TRUE(reg.erase(identifier{i}));
+    }
+
+    ASSERT_EQ(0UL, reg.size());
+}
