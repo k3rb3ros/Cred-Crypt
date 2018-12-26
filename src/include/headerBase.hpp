@@ -17,8 +17,8 @@
 
 /*
  * The MAGIC_NUMBER is stored as a 64 bit unsigned integer
- * The VERSION_MAJOR is stored as a double (64 bit floating point number)
- * The VERSION_MINOR is stored as a double (64 bit floating point number)
+ * The VERSION_MAJOR is stored as a double (64 bit integer number)
+ * The VERSION_MINOR is stored as a double (64 bit integer number)
  * The total header is 88bytes
  *                          HEADER STRUCTURE
  *|##############################SALT###############################|
@@ -31,7 +31,7 @@ struct header
     //data section
     uint64_t magic_number{MAGIC_NUMBER};
     uint64_t data_size{0};
-    double version_major{VERSION_MAJOR};
+    uint64_t version_major{VERSION_MAJOR};
     uint64_t version_minor{VERSION_MINOR};
     //end data section
     std::array<uint64_t, OCB_TAG_WORD_SIZE> tag{}; //does not count as header data

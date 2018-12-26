@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * The headeReader is used to read and verify the contents of a CredCrypt header
+ * The headerReader is used to read and verify the contents of a CredCrypt header
  * verifying that the file was not modified and that the password + salt used to
  * generate the masterKey are correct.
  */

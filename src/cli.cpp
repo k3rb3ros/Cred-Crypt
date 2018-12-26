@@ -597,7 +597,8 @@ int main()
     credCrypt instance;
     state.instance_ = &instance;
 
-    cout << border << intro_msg << "#   " << VERSION_MAJOR << "." << VERSION_MINOR << "   #\r\n"
+    cout << border << intro_msg << "#   " << VERSION_MAJOR << "." << VERSION_MINOR << "."
+         << VERSION_REVISION << "   #" << endl
          << border << endl;
 
     //main event loop

@@ -2,9 +2,6 @@ cmake_minimum_required (VERSION 3.8)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set (CMAKE_BUILD_TYPE Debug)
-set (CMAKE_VERBOSE_MAKEFILE ON)
-
 #C files for LibCredCrypt
 set (CRED_CRYPT_C_SRC
      ctrMode.c
