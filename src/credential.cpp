@@ -398,8 +398,8 @@ ostream& operator <<(std::ostream &os, const credential* c)
 credential::~credential()
 {
     #ifdef DBG_CRED
-    unique_ptr<uint8_t> id_hex(new uint8_t[2*ID_BYTE_SIZE+1]());
-    cout << "Destructor called on credential { " << hexEncode((uint8_t*)id_.data(), id_hex.get(), ID_BYTE_SIZE)
+    array<uint8_t, (2*ID_BYTE_SIZE)+1> id_hex{};
+    cout << "Destructor called on credential { " << hexEncode((uint8_t*)id_.data(), id_hex.data(), ID_BYTE_SIZE)
          << " }"<< endl;
     #endif
     //zero fill all buffers that might leak information

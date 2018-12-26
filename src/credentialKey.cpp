@@ -15,7 +15,9 @@ credentialKey::credentialKey(const masterKey& mk): mk_{mk}
 
 credentialKey::credentialKey(const masterKey& mk, secStr& salt_hex): mk_{mk}
 {
-    if (hexDecode(salt_hex.byteStr(), (uint8_t*)salt_.data(), (2*salt_.size())) != nullptr)
+    if (hexDecode(salt_hex.byteStr(),
+                  reinterpret_cast<uint8_t*>(salt_.data()),
+                  salt_hex.size()) != nullptr)
     { salted_ = true; }
 
     #ifdef KEY_DEBUG
