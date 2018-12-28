@@ -72,22 +72,23 @@ set (CLI_SRC
 
 add_library (cJSON SHARED ${CJSON_SRC})
 target_compile_features(cJSON PRIVATE ${c_compile_features})
-target_compile_options(cJSON PRIVATE ${c_compile_options})
+target_compile_options(cJSON PRIVATE ${c_compile_options} ${c_optimization_settings})
 set_target_properties (cJSON PROPERTIES VERSION ${CJSONVERSION}
                        SOVERSION ${CJSONSOVERSION})
 add_library (CredCrypt SHARED ${CREDCRYPT_SRC})
 target_compile_features(CredCrypt PRIVATE ${cxx_compile_features})
-target_compile_options(CredCrypt PRIVATE ${cxx_compile_options})
+target_compile_options(CredCrypt PRIVATE ${cxx_compile_options} ${cxx_optimization_settings})
 set_target_properties (CredCrypt PROPERTIES VERSION ${CREDCRYPTVERSION}
                        SOVERSION ${CREDCRYPTSOVERSION})
 add_library (scrypt_KDF SHARED ${SCRYPT_SRC})
 target_compile_features(scrypt_KDF PRIVATE ${c_compile_features})
+# optimization breaks scrypt which is supposed to be slow anyway
 target_compile_options(scrypt_KDF PRIVATE ${c_compile_options})
 set_target_properties (scrypt_KDF PROPERTIES VERSION ${SCRYPTVERSION}
                        SOVERSION ${SCRYPTSOVERSION})
 add_library (skein3fish SHARED ${S3F_SRC})
 target_compile_features(skein3fish PRIVATE ${c_compile_features})
-target_compile_options(skein3fish PRIVATE ${c_compile_options})
+target_compile_options(skein3fish PRIVATE ${c_compile_options} ${cxx_optimization_settings})
 set_target_properties (skein3fish PROPERTIES VERSION ${S3FVERSION}
                        SOVERSION ${S3FSOVERSION})
 

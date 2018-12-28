@@ -12,14 +12,16 @@ project (Cred_Crypt
 
 include (CheckIncludeFiles)
 
-set (CMAKE_BUILD_TYPE Debug)
+set (CMAKE_BUILD_TYPE Release)
 set (CMAKE_VERBOSE_MAKEFILE OFF)
 
 #compiler flags
 set (c_compile_features c_std_11)
-set (c_compile_options -Wall -Wextra -pedantic -O0)
+set (c_compile_options -Wall -Wextra -pedantic)
+set (c_optimization_settings -O2)
 set (cxx_compile_features cxx_std_17)
-set (cxx_compile_options -Wall -Wextra -pedantic -O0)
+set (cxx_compile_options -Wall -Wextra -pedantic -O2)
+set (cxx_optimization_settings -O2)
 
 #libary versions
 set (CREDCRYPTVERSION "0.8.0")
