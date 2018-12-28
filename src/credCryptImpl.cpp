@@ -261,6 +261,10 @@ bool credCryptImpl::loadCredentialsFromFile(secStr& f_name, secStr& pw)
         }
         ifs.close();
     }
+    else
+    {
+        cerr << "ERROR: unable to open file" << endl;
+    }
 
     return success;
 }
