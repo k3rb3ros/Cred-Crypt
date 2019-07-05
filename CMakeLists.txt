@@ -16,13 +16,11 @@ set (CMAKE_BUILD_TYPE Debug)
 set (CMAKE_VERBOSE_MAKEFILE OFF)
 
 #compiler flags
-set (c_compile_features c_std_11)
-set (c_compile_options -Wall -Wextra -pedantic -O0)
-set (cxx_compile_features cxx_std_17)
-set (cxx_compile_options -Wall -Wextra -pedantic -O0)
+set (c_compile_options -Wall -Wextra -pedantic)
+set (cxx_compile_options -Wall -Wextra -pedantic)
 
 #libary versions
-set (CREDCRYPTVERSION "0.8.0")
+set (CREDCRYPTVERSION "0.9.0")
 set (CREDCRYPTSOVERSION "0.7")
 set (CJSONVERSION "1.2.0")
 set (CJSONSOVERSION "1.2")
@@ -38,16 +36,9 @@ if (NOT DEFINED ${GTEST_PATH} OR ${GTEST_PATH} EQUAL "")
     set (GTEST_PATH "/home/k3rb3ros/utilities/google_test/googletest/build/googlemock/gtest")
 endif ()
 
-if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
-  set (LIBDIRNAME "lib64")
-else ()
-  set (LIBDIRNAME "lib")
-endif ()
-
-check_include_files (stdint.h HAVE_STDIND_H)
-check_include_files (stdlib.h HAVE_STDLIB_H)
-check_include_files (stddef.h HAVE_STDDEF_H)
-check_include_files (string.h HAVE_STRING_H)
-
+add_subdirectory (lib)
 add_subdirectory (src)
+add_dependencies (CredCrypt CredCrypt scrypt_KDF skein3fish)
 add_subdirectory (test)
+add_dependencies (${API_TESTS} CredCrypt scrypt_KDF skein3fish)
+add_dependencies (${APP_TESTS} CredCrypt scrypt_KDF skein3fish)
